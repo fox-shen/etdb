@@ -4,11 +4,14 @@
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
+#include <assert.h>
 
 #include <sys/types.h>
 #include <unistd.h>
 #include <stdint.h>
+#include <sys/time.h>
 
 #include <emdb_trie.h>
+#include <emdb_utils.h>
 
 #endif

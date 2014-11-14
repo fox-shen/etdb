@@ -15,7 +15,7 @@ clean :
 EmdbTestTrie : emdb_test_trie.o
 	cc $(CFLAGS) -o $@ $^ $(LIBPATH) $(LIBS)
 
-libemdb.a: emdb_trie.o
+libemdb.a: emdb_trie.o emdb_utils.o
 	ar cr $@ $^	
 
 .o : .c
