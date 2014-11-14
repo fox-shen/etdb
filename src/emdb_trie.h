@@ -62,7 +62,7 @@ extern int64_t
 emdb_trie_exact_match_search(emdb_trie_t *trie, const char *key, size_t len);
 
 extern void
-emdb_trie_common_prefix_search(emdb_trie_t *trie, const char *key, size_t len);
+emdb_trie_common_prefix_search(emdb_trie_t *trie, const char *key, size_t len, int64_t *array, size_t *size, emdb_pool_t *pool);
 
 /*** delete trie ***/
 extern int
