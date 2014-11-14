@@ -13,5 +13,7 @@
 
 #include <emdb_trie.h>
 #include <emdb_utils.h>
+#include <emdb_config.h>
+#include <emdb_geo_hash.h>
 
 #endif

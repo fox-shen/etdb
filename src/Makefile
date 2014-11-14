@@ -2,20 +2,16 @@
 INCLUDE = -I .
 LIBPATH = -lpthread -lm -lrt -lcrypto -lssl -lidn 
 
-CFLAGS = -g -O0 ${INCLUDE}
+CFLAGS = -g -O3 ${INCLUDE}
 LIBS = libemdb.a
-TESTS = EmdbTestTrie
 
 #Actions
 all : clean $(LIBS) $(TESTS)
 
 clean : 
-	rm -r -f *.o $(LIB) $(TESTS)
+	rm -r -f *.o $(LIB)
 
-EmdbTestTrie : emdb_test_trie.o
-	cc $(CFLAGS) -o $@ $^ $(LIBPATH) $(LIBS)
-
-libemdb.a: emdb_trie.o emdb_utils.o
+libemdb.a: emdb_trie.o emdb_utils.o emdb_geo_hash.o
 	ar cr $@ $^	
 
 .o : .c

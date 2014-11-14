@@ -23,8 +23,12 @@ struct emdb_trie_node_s{
   int64_t check;                               /** negative means next empty index **/
 };
 
+//#define EMDB_TRIE_REDUCED
+
+#define EMDB_TRIE_NO_PATH            -2
+#define EMDB_TRIE_NO_VALUE           -1
 #define EMDB_TRIE_NUM_TRACKING_NODES 0
-#define EMDB_TRIE_VALUE_LIMIT        0xffffffffffff
+#define EMDB_TRIE_VALUE_LIMIT        0xefffffffffffffff
 #define EMDB_TRIE_MAX_TRIAL          1
 
 typedef struct emdb_trie_s emdb_trie_t;
@@ -50,8 +54,24 @@ emdb_trie_init(emdb_trie_t *trie);
 extern int
 emdb_trie_update(emdb_trie_t *trie, const char *key, size_t len, int64_t value);
 
+/*** search trie ***/
+extern int64_t
+emdb_trie_exact_match_search(emdb_trie_t *trie, const char *key, size_t len);
+
 /*** delete trie ***/
 extern int
-erase(emdb_trie_t *trie, const char *key, size_t len);
+emdb_trie_erase(emdb_trie_t *trie, const char *key, size_t len);
+
+/*** get total size ***/
+extern int64_t
+emdb_trie_total_size(emdb_trie_t *trie);
+
+/*** get nonzero size ****/
+extern int64_t
+emdb_trie_nonzero_size(emdb_trie_t *trie);
+
+/*** get # keys ***/
+extern int64_t
+emdb_trie_num_keys(emdb_trie_t *trie);
 
 #endif

@@ -319,7 +319,11 @@ emdb_trie_resolve(emdb_trie_t *trie, int64_t *from_n, const int64_t base_n, cons
 {
   int64_t to_pn   = base_n ^ label_n;
   int64_t from_p  = trie->node[to_pn].check;
+#ifdef EMDB_TRIE_REDUCED
+  int64_t base_p  = -(trie->node[from_p].base + 1);
+#else
   int64_t base_p  = trie->node[from_p].base;
+#endif
   int flag = emdb_trie_consult(trie, base_n, base_p, trie->ninfo[*from_n].child, trie->ninfo[from_p].child);
   uint8_t child[256];
   uint8_t* const first = &child[0];
@@ -352,10 +356,15 @@ emdb_trie_resolve(emdb_trie_t *trie, int64_t *from_n, const int64_t base_n, cons
     if((n->base = n_->base) > 0 && *p)
 #endif
     {
-      uint8_t c = trie->ninfo[to].child = trie->ninfo[to_].child;
+      uint8_t c  = trie->ninfo[to].child = trie->ninfo[to_].child;
+#ifdef EMDB_TRIE_REDUCED
+      int64_t nb = -(n->base + 1); 
+#else
+      int64_t nb = n->base;
+#endif
       do{
-        trie->node[n->base ^ c].check = to;
-      }while((c = trie->ninfo[n->base ^ c].sibling));
+        trie->node[nb ^ c].check = to;
+      }while((c = trie->ninfo[nb ^ c].sibling));
     }
 
     if(!flag && to_ == *from_n){
@@ -394,44 +403,44 @@ static int64_t
 emdb_trie_follow(emdb_trie_t *trie, int64_t *from, const uint8_t label)
 {
   int64_t to = 0;
+#ifdef EMDB_TRIE_REDUCED
+  const int64_t base = -(trie->node[*from].base + 1);
+#else
   const int64_t base = trie->node[*from].base;
+#endif
   if(base < 0 || trie->node[to = base ^ label].check < 0){
     to = emdb_trie_pop_empty_node(trie, base, label, *from);
     emdb_trie_push_sibling(trie, *from, to ^ label, label, base >= 0);  
   }else if(trie->node[to].check != *from){
-printf("sssssssssssssss\n");
-fflush(stdout);
     to = emdb_trie_resolve(trie, from, base, label);
   } 
   return to;
 }
 
-static int
-emdb_trie_update_impl(emdb_trie_t *trie, const char *key, int64_t *from, int64_t *pos, size_t len, int64_t value)
+static void
+emdb_trie_update_entry(emdb_trie_t *trie, int64_t *from, uint8_t word, uint8_t sp)
 {
-  const uint8_t *key_uint8 = (const uint8_t*)key;
-  for( ; *pos < len; ++(*pos)){
 #ifdef EMDB_TRIE_REDUCED
-    const int64_t val = trie->node[from].value;
-    if(val >= 0 && val != EMDB_TRIE_VALUE_LIMIT){
-      const int64_t to = emdb_trie_follow(trie, from, 0);
-      trie->node[to].value = val;
-    } 
-#else
-    *from  = emdb_trie_follow(trie, from, key_uint8[*pos]);
+  const int64_t val = trie->node[*from].value;
+  if(val >= 0 && val != EMDB_TRIE_VALUE_LIMIT){
+    const int64_t to = emdb_trie_follow(trie, from, 0);
+    trie->node[to].value = val;
+  } 
 #endif
+  /*** encode ***/
+  if(!sp){
+    if(word == '\0'){
+      *from = emdb_trie_follow(trie, from, '%');
+      emdb_trie_update_entry(trie, from, '0', 1);
+    }else if(word == '%'){
+      *from = emdb_trie_follow(trie, from, '%');
+      emdb_trie_update_entry(trie, from, '%', 1);
+    }else{
+      *from  = emdb_trie_follow(trie, from, word);
+    }
+  }else{
+    *from  = emdb_trie_follow(trie, from, word);
   }
-
-#ifdef EMDB_TRIE_REDUCED
-  const int64_t to = trie->node[*from].value >= 0 ? *from : emdb_trie_follow(trie, from, 0);
-  if(trie->node[to].value == EMDB_TRIE_VALUE_LIMIT){
-    trie->node[to].value = 0;
-  }
-#else
-  const int64_t to = emdb_trie_follow(trie, from, 0);
-#endif
-  trie->node[to].value = value;
-  return 1;
 }
 
 int
@@ -441,11 +450,123 @@ emdb_trie_update(emdb_trie_t *trie, const char *key, size_t len, int64_t value)
   int64_t pos  = 0;
   if(len == 0)
     return 0;
-  return emdb_trie_update_impl(trie, key, &from, &pos, len, value);
+  
+  const uint8_t *key_uint8 = (const uint8_t*)key;
+  int sp = 0;
+  for( ; pos < len; ++(pos)){
+    emdb_trie_update_entry(trie, &from, key_uint8[pos], 0);
+  }
+
+#ifdef EMDB_TRIE_REDUCED
+  const int64_t to = trie->node[from].value >= 0 ? from : emdb_trie_follow(trie, &from, 0);
+  if(trie->node[to].value == EMDB_TRIE_VALUE_LIMIT){
+    trie->node[to].value = 0;
+  }
+#else
+  const int64_t to = emdb_trie_follow(trie, &from, 0);
+#endif
+  trie->node[to].value = value;
+  return 1;
+}
+
+static int64_t
+emdb_trie_find(emdb_trie_t *trie, const char *key, int64_t *from, size_t pos, size_t len)
+{
+  int64_t to;
+  uint8_t *key_int8 = (uint8_t*)key;
+  for(; pos < len; ){
+    uint8_t word  = key_int8[pos];
+    uint8_t again_word = ' ';
+    switch(word){
+      case '\0':
+        word       = '%';
+        again_word = '0';
+        break;
+      case '%':
+        word       = '%';
+        again_word = '%';
+        break;
+      default:
+        break;
+    }
+  
+AGAIN:
+#ifdef EMDB_TRIE_REDUCED
+    if(trie->node[*from].value >= 0) break;
+    to = -(trie->node[*from].base + 1);
+#else
+    to = trie->node[*from].base;
+#endif
+    to         = to ^ word;
+    if(trie->node[to].check != *from)
+      return EMDB_TRIE_NO_VALUE;
+    *from       = to;
+    if(again_word != ' '){
+      word = again_word;
+      again_word = ' ';
+      goto AGAIN;
+    }
+    ++pos;
+  }
+#ifdef EMDB_TRIE_REDUCED
+  if(trie->node[*from].value >= 0)
+    return pos == len ? trie->node[*from].value : EMDB_TRIE_NO_PATH; 
+  emdb_trie_node_t *n = trie->node + ((-(trie->node[*from].base + 1)) ^ 0);
+#else 
+  emdb_trie_node_t *n = trie->node + (trie->node[*from].base ^ 0);
+#endif
+  if(n->check != *from)
+    return EMDB_TRIE_NO_VALUE;
+  return n->base;
+}
+
+int64_t
+emdb_trie_exact_match_search(emdb_trie_t *trie, const char *key, size_t len)
+{
+  int64_t ret  = -1;
+  size_t  pos  = 0;
+  int64_t from = 0;
+  union{ int64_t i; int64_t value;} b;
+  b.i = emdb_trie_find(trie, key, &from, pos, len);
+  if(b.i == EMDB_TRIE_NO_PATH)
+    b.i = EMDB_TRIE_NO_VALUE;
+  return b.value;
 }
 
 int
-erase(emdb_trie_t *trie, const char *key, size_t len)
+emdb_trie_erase(emdb_trie_t *trie, const char *key, size_t len)
 {
   return 1;
+}
+
+int64_t
+emdb_trie_total_size(emdb_trie_t *trie)
+{
+  return trie->size;
+}
+
+int64_t
+emdb_trie_nonzero_size(emdb_trie_t *trie)
+{
+  int64_t i = 0, to = 0;
+  for(; to < trie->size; ++to){
+    if(trie->node[to].check >= 0) ++i;
+  }
+  return i;
+}
+
+int64_t
+emdb_trie_num_keys(emdb_trie_t *trie)
+{
+  size_t i = 0, to = 0;
+  for(; to < trie->size; ++to){
+#ifdef EMDB_TRIE_REDUCED
+    if(trie->node[to].check >= 0 && trie->node[to].value >= 0)
+      ++i;
+#else
+    if(trie->node[to].check >= 0 && trie->node[trie->node[to].check].base == to)
+      ++i;
+#endif
+  }
+  return i;
 }
