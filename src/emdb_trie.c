@@ -282,6 +282,16 @@ emdb_trie_push_sibling(emdb_trie_t *trie, int64_t from, int64_t base, const uint
   *c = label;
 }
 
+static void
+emdb_trie_pop_sibling(emdb_trie_t *trie, int64_t from, int64_t base, const uint8_t label)
+{
+  uint8_t *c = &(trie->ninfo[from].child);
+  while(*c != label){
+    c = &(trie->ninfo[base ^ *c].sibling);
+  }
+  *c = trie->ninfo[base ^ label].sibling;
+}
+
 static int
 emdb_trie_consult(emdb_trie_t *trie, const int64_t base_n, const int64_t base_p, uint8_t c_n, uint8_t c_p)
 {
@@ -533,9 +543,41 @@ emdb_trie_exact_match_search(emdb_trie_t *trie, const char *key, size_t len)
   return b.value;
 }
 
+static void
+emdb_trie_erase_impl(emdb_trie_t *trie, int64_t from)
+{
+#ifdef EMDB_TRIE_REDUCED
+  int64_t e = trie->node[from].value >= 0 ? from : (-(trie->node[from].base + 1)) ^ 0;
+  from = trie->node[e].check;
+#else
+  int64_t e = trie->node[from].base ^ 0; 
+#endif
+  uint8_t flag = 0; /*** have sibling ***/
+  do{
+    emdb_trie_node_t *n = trie->node + from;
+#ifdef EMDB_TRIE_REDUCED
+    int64_t nb          = -(n->base + 1);
+#else
+    int64_t nb          = n->base;
+#endif
+    flag = trie->ninfo[nb ^ trie->ninfo[from].child].sibling;
+    if(flag){
+      emdb_trie_pop_sibling(trie, from, nb, nb ^ e);
+    }
+    emdb_trie_push_empty_node(trie, e);
+    e    = from;
+    from = trie->node[from].check;
+  }while(!flag);
+}
+
 int
 emdb_trie_erase(emdb_trie_t *trie, const char *key, size_t len)
 {
+  int64_t from = 0, pos = 0;
+  int64_t i = emdb_trie_find(trie, key, &from, pos, len);
+  if(i == EMDB_TRIE_NO_PATH || i == EMDB_TRIE_NO_VALUE)
+    return 0;
+  emdb_trie_erase_impl(trie, from);
   return 1;
 }
 
