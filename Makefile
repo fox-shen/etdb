@@ -1,5 +1,5 @@
 #Macros
-SUBDIRS = src
+SUBDIRS = src test
 
 #Actions
 all : clean
