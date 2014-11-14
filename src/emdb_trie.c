@@ -4,7 +4,7 @@ static int
 emdb_trie_node_realloc(emdb_trie_node_t **node, size_t size_n, size_t size_p)
 {
   emdb_trie_node_t *p, *r;
-  void *tmp = realloc(*node, sizeof(emdb_trie_node_t)*size_n);
+  void *tmp = emdb_realloc(*node, sizeof(emdb_trie_node_t)*size_n);
   if(!tmp){
      return 0;
   }
@@ -21,7 +21,7 @@ static int
 emdb_trie_ninfo_realloc(emdb_trie_ninfo_t **ninfo, size_t size_n, size_t size_p)
 {
   emdb_trie_ninfo_t *p, *r;
-  void *tmp = realloc(*ninfo, sizeof(emdb_trie_ninfo_t)*size_n);
+  void *tmp = emdb_realloc(*ninfo, sizeof(emdb_trie_ninfo_t)*size_n);
   if(!tmp){
     return 0;
   } 
@@ -38,7 +38,7 @@ static int
 emdb_trie_block_realloc(emdb_trie_block_t **block, size_t size_n, size_t size_p)
 {
   emdb_trie_block_t *p, *r;
-  void *tmp = realloc(*block, sizeof(emdb_trie_block_t)*size_n);
+  void *tmp = emdb_realloc(*block, sizeof(emdb_trie_block_t)*size_n);
   if(!tmp){
     return 0;
   }
@@ -91,6 +91,23 @@ emdb_trie_init(emdb_trie_t *trie)
   for(i = 0; i < EMDB_TRIE_NUM_TRACKING_NODES; ++i)  trie->tracking_node[i] = 0;
   for(i = 0; i <= 256; ++i) trie->reject[i] = i + 1;
   return 1;
+}
+
+void
+emdb_trie_destory(emdb_trie_t *trie)
+{
+  if(trie->node != NULL){
+    emdb_free(trie->node);
+    trie->node = NULL;
+  }
+  if(trie->ninfo != NULL){
+    emdb_free(trie->ninfo);
+    trie->ninfo = NULL;
+  }
+  if(trie->block != NULL){
+    emdb_free(trie->block);
+    trie->block = NULL;
+  }
 }
 
 static void
@@ -542,6 +559,12 @@ emdb_trie_exact_match_search(emdb_trie_t *trie, const char *key, size_t len)
   if(b.i == EMDB_TRIE_NO_PATH)
     b.i = EMDB_TRIE_NO_VALUE;
   return b.value;
+}
+
+void
+emdb_trie_common_prefix_search(emdb_trie_t *trie, const char *key, size_t len)
+{
+  
 }
 
 static void

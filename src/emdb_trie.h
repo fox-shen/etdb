@@ -50,6 +50,9 @@ struct emdb_trie_s{
 extern int
 emdb_trie_init(emdb_trie_t *trie);
 
+extern void
+emdb_trie_destory(emdb_trie_t *trie);
+
 /*** update trie ****/
 extern int
 emdb_trie_update(emdb_trie_t *trie, const char *key, size_t len, int64_t value);
@@ -57,6 +60,9 @@ emdb_trie_update(emdb_trie_t *trie, const char *key, size_t len, int64_t value);
 /*** search trie ***/
 extern int64_t
 emdb_trie_exact_match_search(emdb_trie_t *trie, const char *key, size_t len);
+
+extern void
+emdb_trie_common_prefix_search(emdb_trie_t *trie, const char *key, size_t len);
 
 /*** delete trie ***/
 extern int
