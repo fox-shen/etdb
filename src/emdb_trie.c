@@ -273,10 +273,10 @@ static void
 emdb_trie_push_sibling(emdb_trie_t *trie, int64_t from, int64_t base, const uint8_t label, int flag)
 {
   uint8_t* c = &trie->ninfo[from].child;
-  if(flag && label > *c){
+  if(flag && /*label > *c */ !(*c)){
     do{
       c = &trie->ninfo[base ^ *c].sibling;
-    }while(*c && *c < label);
+    }while(/**c && *c < label*/0);
   }
   trie->ninfo[base ^ label].sibling = *c;
   *c = label;
@@ -310,10 +310,11 @@ emdb_trie_set_child(emdb_trie_t *trie, uint8_t *p, const int64_t base, uint8_t c
     *++p = c;
     c = trie->ninfo[base ^ c].sibling;
   }
+  /*
   while(c && c < label){
     *++p = c;
     c = trie->ninfo[base ^ c].sibling;
-  }
+  }*/
   if(label != -1){
     *++p = (uint8_t)label;
   }
