@@ -11,13 +11,15 @@
 #include <stdint.h>
 #include <sys/time.h>
 
-#include <emdb_trie.h>
-#include <emdb_time.h>
-#include <emdb_config.h>
-#include <emdb_geo_hash.h>
-#include <emdb_string.h>
 #include <emdb_alloc.h>
 #include <emdb_palloc.h>
+#include <emdb_time.h>
+#include <emdb_string.h>
+#include <emdb_config.h>
 #include <emdb_queue.h>
+#include <emdb_stack.h>
+
+#include <emdb_geo_hash.h>
+#include <emdb_trie.h>
 
 #endif
