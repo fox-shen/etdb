@@ -38,4 +38,8 @@ void* emdb_palloc(emdb_pool_t *pool, size_t size);
 void* emdb_pnalloc(emdb_pool_t *pool, size_t size);
 void* emdb_pcalloc(emdb_pool_t *pool, size_t size);
 
+int emdb_pfree(emdb_pool_t *pool, void *p);
+void* emdb_palloc_large(emdb_pool_t *pool, size_t size);
+void* emdb_prealloc_large(emdb_pool_t *pool, void *raw, size_t size);
+
 #endif

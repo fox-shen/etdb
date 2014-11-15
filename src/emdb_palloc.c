@@ -68,7 +68,7 @@ emdb_palloc_block(emdb_pool_t *pool, size_t size)
   return m; 
 }
 
-static void*
+void*
 emdb_palloc_large(emdb_pool_t *pool, size_t size)
 {
   void *p;
@@ -101,6 +101,18 @@ emdb_palloc_large(emdb_pool_t *pool, size_t size)
   return p;
 }
 
+void* 
+emdb_prealloc_large(emdb_pool_t *pool, void *raw, size_t size)
+{
+  emdb_pool_large_t *l;
+  for( l = pool->large; l; l = l->next){
+    if(raw == l->alloc){
+       l->alloc = emdb_realloc(raw, size);
+       return l->alloc;
+    }
+  }
+  return NULL;
+}
 void* 
 emdb_palloc(emdb_pool_t *pool, size_t size)
 {
@@ -145,4 +157,18 @@ emdb_pcalloc(emdb_pool_t *pool, size_t size)
     memset(p, 0, size);
   }
   return p;
+}
+
+int 
+emdb_pfree(emdb_pool_t *pool, void *p)
+{
+  emdb_pool_large_t *l;
+  for( l = pool->large; l; l = l->next){
+    if(p == l->alloc){
+       emdb_free(l->alloc);
+       l->alloc = NULL;
+       return 0;
+    }
+  }
+  return -1;
 }

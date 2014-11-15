@@ -67,6 +67,9 @@ emdb_init(int argc, char **argv)
   }
   emdb_init_server_conn();
   emdb_init_signal();
+  if(emdb_module_init() < 0){
+    exit(0);
+  }
 }
 
 static void 
@@ -74,8 +77,13 @@ emdb_master_cycle()
 {
   const emdb_event_t *events = NULL;
   emdb_queue_t *q;
+  emdb_connection_t conn_ready_list_1, conn_ready_list_2;
+
   while(!emdb_quit)
   {
+    emdb_queue_init(&(conn_ready_list_1.queue));
+    emdb_queue_init(&(conn_ready_list_2.queue));
+
     events = emdb_event_mgr_wait(&emdb_event_mgr, 50);
     if(events == NULL)
     {
@@ -106,14 +114,26 @@ emdb_master_cycle()
       }
       else if(ev->events & FDEVENT_IN)
       { /*** read data ****/
-        
+        int len = emdb_connect_read(cur_conn); 
+        if(len <= 0){
+          --emdb_conn_cnt;
+          emdb_event_mgr_del(&emdb_event_mgr, EMDB_CONN_FD(cur_conn));
+          emdb_connect_close(cur_conn);
+        }else{
+          emdb_queue_insert_tail(&(conn_ready_list_1.queue), &(cur_conn->queue));       
+        }
       }
       else if(ev->events & FDEVENT_OUT)
       { /*** write data ****/
         
       }
     }
-    
+
+    /*** post process ***/ 
+    for(q = emdb_queue_next(&(conn_ready_list_1.queue)); q != &(conn_ready_list_1.queue); q = emdb_queue_next(q)){
+      emdb_connection_t *conn = (emdb_connection_t*)q;
+      emdb_bytes_t *req       = emdb_connect_recv(conn); 
+    }
   }   
 }
 

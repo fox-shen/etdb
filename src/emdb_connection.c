@@ -1,5 +1,14 @@
 #include <emdb.h>
 
+static void
+emdb_connect_init_buf(emdb_connection_t *conn)
+{
+  conn->buf_in  = (emdb_buf_t*)emdb_palloc(conn->pool, sizeof(emdb_buf_t));
+  conn->buf_out = (emdb_buf_t*)emdb_palloc(conn->pool, sizeof(emdb_buf_t));
+  emdb_buf_init(conn->buf_in,  conn->pool, EMDB_CONNECTION_BUF_SIZE);
+  emdb_buf_init(conn->buf_out, conn->pool, EMDB_CONNECTION_BUF_SIZE);
+}
+
 void 
 emdb_connect_close(emdb_connection_t *conn)
 {
@@ -53,10 +62,11 @@ emdb_connect_request(const char *ip, int port)
     goto sock_err;
   }
   pool = emdb_create_pool(EMDB_CONNECTION_DEFAULT_POOL_SIZE);
-  conn = emdb_palloc(pool, sizeof(emdb_connection_t));
+  conn = emdb_pcalloc(pool, sizeof(emdb_connection_t));
   conn->pool = pool;
   conn->sock = sock;
   emdb_connect_keepalive(conn, 1);
+  emdb_connect_init_buf(conn);
   return conn;
 
 sock_err:
@@ -92,7 +102,7 @@ emdb_connect_listen(const char *ip,  int port)
     goto sock_err;
   }
   pool = emdb_create_pool(EMDB_CONNECTION_DEFAULT_POOL_SIZE);
-  conn = emdb_palloc(pool, sizeof(emdb_connection_t));
+  conn = emdb_pcalloc(pool, sizeof(emdb_connection_t));
   conn->pool = pool;
   conn->sock = sock;
   snprintf(conn->remote_ip, sizeof(conn->remote_ip), "%s", ip);
@@ -125,12 +135,59 @@ emdb_connect_accept(emdb_connection_t *conn)
   }
 
   pool       = emdb_create_pool(EMDB_CONNECTION_DEFAULT_POOL_SIZE);
-  new_conn   = emdb_palloc(pool, sizeof(emdb_connection_t));
+  new_conn   = emdb_pcalloc(pool, sizeof(emdb_connection_t));
   new_conn->pool = pool;
   new_conn->sock = client_sock;
   emdb_connect_keepalive(new_conn, 1);
+  emdb_connect_init_buf(new_conn);
 
   inet_ntop(AF_INET, &addr.sin_addr, new_conn->remote_ip, sizeof(new_conn->remote_ip));
   new_conn->remote_port = ntohs(addr.sin_port);
   return new_conn;
+}
+
+int 
+emdb_connect_read(emdb_connection_t *conn)
+{
+  int ret = 0;
+  int want;
+  emdb_buf_nice(conn->buf_in);
+  while((want = emdb_buf_space(conn->buf_in)) > 0){
+    int len = read(EMDB_CONN_FD(conn), emdb_buf_slot(conn->buf_in), want);
+    if(len == -1){
+      if(errno == EINTR)
+        continue;
+      else if(errno == EWOULDBLOCK)
+        break;
+      else
+        return -1;
+    }else{
+      if(len == 0)
+        return 0;
+      ret += len;
+      emdb_buf_incr(conn->buf_in, len);
+    }
+    if(!conn->noblock)
+      break;
+  }
+  return ret;
+}
+
+emdb_bytes_t* 
+emdb_connect_recv(emdb_connection_t *conn)
+{
+  emdb_queue_init(&(conn->recv_data.queue));
+  if(conn->buf_in->size == 0){
+    return &(conn->recv_data);
+  }
+  size_t parsed = 0;
+  size_t size   = conn->buf_in->size; 
+  uint8_t *head = conn->buf_in->data;
+ 
+  if(head[0] == '*'){
+    char data[1024];
+    memset(data, 0, sizeof(data));
+    memcpy(data, head, size);
+    fprintf(stdout, "%s\n", data);
+  } 
 }
