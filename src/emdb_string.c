@@ -22,3 +22,13 @@ emdb_str_split(emdb_str_t *s, uint8_t split, emdb_str_t *splits, size_t *split_n
   }
   return *split_num;
 }
+
+void   
+emdb_str_tolower(uint8_t* data, size_t len)
+{
+  size_t pos;
+  for(pos = 0; pos < len; ++pos){
+    if(data[pos] >= 'A' && data[pos] <= 'Z')
+       data[pos] = 'a' + data[pos] - 'A';
+  }
+}

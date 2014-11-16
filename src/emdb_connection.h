@@ -18,7 +18,8 @@ struct emdb_connection_s{
   emdb_buf_t  *buf_in;
   emdb_buf_t  *buf_out;
 
-  emdb_bytes_t recv_data;
+  emdb_bytes_t recv_cmd;
+  emdb_bytes_t free_cmd;
 };
 
 #define EMDB_CONNECTION_DEFAULT_POOL_SIZE 8192

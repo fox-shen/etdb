@@ -125,7 +125,7 @@ emdb_master_cycle()
       }
       else if(ev->events & FDEVENT_OUT)
       { /*** write data ****/
-        
+         
       }
     }
 
@@ -133,6 +133,20 @@ emdb_master_cycle()
     for(q = emdb_queue_next(&(conn_ready_list_1.queue)); q != &(conn_ready_list_1.queue); q = emdb_queue_next(q)){
       emdb_connection_t *conn = (emdb_connection_t*)q;
       emdb_bytes_t *req       = emdb_connect_recv(conn); 
+      if(req == NULL){
+        --emdb_conn_cnt;
+        emdb_event_mgr_del(&emdb_event_mgr, EMDB_CONN_FD(conn));
+        emdb_connect_close(conn);
+        continue;
+      }
+      if(emdb_queue_empty(&(req->queue))){
+        /*** data not ready ***/
+        if(!emdb_event_mgr_isset(&emdb_event_mgr, EMDB_CONN_FD(conn), FDEVENT_IN)){
+          emdb_event_mgr_set(&emdb_event_mgr, EMDB_CONN_FD(conn), FDEVENT_IN, 1, conn);  
+        }
+        continue;
+      }
+      emdb_command_t* cmd = emdb_module_find_command((emdb_bytes_t*)(req->queue.next));
     }
   }   
 }

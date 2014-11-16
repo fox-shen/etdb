@@ -29,3 +29,16 @@ emdb_module_init()
   }
   return 0;
 }
+
+emdb_command_t* 
+emdb_module_find_command(emdb_bytes_t* bytes)
+{
+  int64_t value_insert = emdb_trie_exact_match_search(&emdb_command_trie, bytes->data, bytes->size);
+  if(value_insert == EMDB_TRIE_NO_VALUE){
+    fprintf(stderr, "not found command\n");
+    return NULL;
+  }
+  int64_t pos = value_insert >> 32;
+  int64_t idx = value_insert & 0xffffffff;
+  return &(emdb_modules[pos].commands[idx]);
+}

@@ -7,6 +7,9 @@ emdb_connect_init_buf(emdb_connection_t *conn)
   conn->buf_out = (emdb_buf_t*)emdb_palloc(conn->pool, sizeof(emdb_buf_t));
   emdb_buf_init(conn->buf_in,  conn->pool, EMDB_CONNECTION_BUF_SIZE);
   emdb_buf_init(conn->buf_out, conn->pool, EMDB_CONNECTION_BUF_SIZE);
+
+  emdb_queue_init(&(conn->recv_cmd.queue));
+  emdb_queue_init(&(conn->free_cmd.queue));
 }
 
 void 
@@ -176,18 +179,21 @@ emdb_connect_read(emdb_connection_t *conn)
 emdb_bytes_t* 
 emdb_connect_recv(emdb_connection_t *conn)
 {
-  emdb_queue_init(&(conn->recv_data.queue));
+  if(!emdb_queue_empty(&(conn->recv_cmd.queue))){
+    emdb_queue_add(&(conn->free_cmd.queue), &(conn->recv_cmd.queue)); 
+    emdb_queue_init(&(conn->recv_cmd.queue));
+  }
   if(conn->buf_in->size == 0){
-    return &(conn->recv_data);
+    return &(conn->recv_cmd);
   }
   size_t parsed = 0;
   size_t size   = conn->buf_in->size; 
   uint8_t *head = conn->buf_in->data;
  
   if(head[0] == '*'){
-    char data[1024];
-    memset(data, 0, sizeof(data));
-    memcpy(data, head, size);
-    fprintf(stdout, "%s\n", data);
+    if( emdb_resp_recv_req(conn) < 0)
+      return NULL;
+    else
+      return &(conn->recv_cmd);
   } 
 }

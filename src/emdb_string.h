@@ -10,5 +10,6 @@ typedef struct{
 #define emdb_null_string {0, NULL}
 
 size_t emdb_str_split(emdb_str_t *s, uint8_t split, emdb_str_t *splits, size_t *split_num);
+void   emdb_str_tolower(uint8_t* data, size_t len);
 
 #endif

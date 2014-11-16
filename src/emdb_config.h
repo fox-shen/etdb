@@ -31,5 +31,6 @@ struct emdb_module_s{
 #define emdb_null_module {emdb_null_string, NULL}
 
 int emdb_module_init();
+emdb_command_t* emdb_module_find_command(emdb_bytes_t* bytes);
 
 #endif
