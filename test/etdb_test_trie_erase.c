@@ -1,10 +1,10 @@
-#include "emdb.h"
+#include "etdb.h"
 
 void
 TestErase()
 {
-   emdb_trie_t trie;
-   emdb_trie_init(&trie);
+   etdb_trie_t trie;
+   etdb_trie_init(&trie);
 #define N 1000000
 #define L 20
    unsigned char** buf_array = (unsigned char**)malloc(sizeof(char*)*N);
@@ -31,17 +31,17 @@ TestErase()
    }
 
    for(i = 0; i < N; ++i){
-     emdb_trie_update(&trie, buf_array[i], L, value[i]);
+     etdb_trie_update(&trie, buf_array[i], L, value[i]);
    }
-   printf("after update key=%d\n", emdb_trie_num_keys(&trie));
-   long int time_stamp_1 = emdb_utls_get_timestamp();
+   printf("after update key=%d\n", etdb_trie_num_keys(&trie));
+   long int time_stamp_1 = etdb_utls_get_timestamp();
    for(i = 0; i < N; ++i){
      // printf("erase: %d -> %d\n", i, N);
-     int64_t v = emdb_trie_erase(&trie, buf_array[i], L);
+     int64_t v = etdb_trie_erase(&trie, buf_array[i], L);
      assert(v != 0);
    }
-   printf("Erase Success, Time: %d(ms)/%d queries\n", (emdb_utls_get_timestamp() - time_stamp_1)/1000, N);
-   printf("after erase key=%d\n", emdb_trie_num_keys(&trie));
+   printf("Erase Success, Time: %d(ms)/%d queries\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, N);
+   printf("after erase key=%d\n", etdb_trie_num_keys(&trie));
 }
 
 int

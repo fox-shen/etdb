@@ -1,12 +1,12 @@
-#include <emdb.h>
+#include <etdb.h>
 
 void
 TestStringSplit()
 {
-  emdb_str_t raw_str = emdb_string("I am a good guy");
-  emdb_str_t splits[20];
+  etdb_str_t raw_str = etdb_string("I am a good guy");
+  etdb_str_t splits[20];
   size_t     split_num = 20;
-  size_t ret   = emdb_str_split(&raw_str, ' ', splits, &split_num);
+  size_t ret   = etdb_str_split(&raw_str, ' ', splits, &split_num);
   assert(ret == 5);
   assert(split_num == 5);
   assert(memcmp(splits[0].data, "I",  splits[0].len) == 0);

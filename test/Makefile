@@ -1,9 +1,9 @@
 #Macros
 INCLUDE = -I../src
-LIBPATH = -lpthread -lm -lrt -lcrypto -lssl -lidn ../src/libemdb.a
+LIBPATH = -lpthread -lm -lrt -lcrypto -lssl -lidn ../src/libetdb.a
 
 CFLAGS = -g -O3 ${INCLUDE}
-TESTS = emdb_test_trie_update emdb_test_trie_search emdb_test_trie_erase emdb_test_string emdb_test_alloc
+TESTS = etdb_test_trie_update etdb_test_trie_search etdb_test_trie_erase etdb_test_string etdb_test_alloc
 
 #Actions
 all : clean $(TESTS)
@@ -11,15 +11,15 @@ all : clean $(TESTS)
 clean : 
 	rm -r -f *.o $(LIB) $(TESTS)
 
-emdb_test_trie_update : emdb_test_trie_update.o
+etdb_test_trie_update : etdb_test_trie_update.o
 	cc $(CFLAGS) -o $@ $^ $(LIBPATH) $(LIBS)
-emdb_test_trie_search: emdb_test_trie_search.o
+etdb_test_trie_search: etdb_test_trie_search.o
 	cc $(CFLAGS) -o $@ $^ $(LIBPATH) $(LIBS)
-emdb_test_trie_erase: emdb_test_trie_erase.o
+etdb_test_trie_erase: etdb_test_trie_erase.o
 	cc $(CFLAGS) -o $@ $^ $(LIBPATH) $(LIBS)
-emdb_test_string: emdb_test_string.o
+etdb_test_string: etdb_test_string.o
 	cc $(CFLAGS) -o $@ $^ $(LIBPATH) $(LIBS)
-emdb_test_alloc: emdb_test_alloc.o
+etdb_test_alloc: etdb_test_alloc.o
 	cc $(CFLAGS) -o $@ $^ $(LIBPATH) $(LIBS)
 
 .o : .c

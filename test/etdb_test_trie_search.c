@@ -1,31 +1,31 @@
-#include "emdb.h"
+#include "etdb.h"
 
 void
 TestSearch()
 {
-   emdb_trie_t trie;
-   emdb_trie_init(&trie);
+   etdb_trie_t trie;
+   etdb_trie_init(&trie);
    unsigned char buf[1024];
    int64_t value = 1;
    sprintf(buf, "1234#1234");
    buf[4] = '\0';
-   emdb_trie_update(&trie, buf, 8, value);
+   etdb_trie_update(&trie, buf, 8, value);
   
    value = 2;
    sprintf(buf, "you love me too");
-   //emdb_trie_update(&trie, buf, strlen(buf), value);
+   //etdb_trie_update(&trie, buf, strlen(buf), value);
 
    sprintf(buf, "1234#1234");
    buf[4] = '\0';
-   value = emdb_trie_exact_match_search(&trie, buf, 8);
-   printf("value = %d key=%d\n", value, emdb_trie_num_keys(&trie));
+   value = etdb_trie_exact_match_search(&trie, buf, 8);
+   printf("value = %d key=%d\n", value, etdb_trie_num_keys(&trie));
 }
 
 void
 TestSearchHuge()
 {
-   emdb_trie_t trie;
-   emdb_trie_init(&trie);
+   etdb_trie_t trie;
+   etdb_trie_init(&trie);
 #define N 1000000
 #define L 20
    unsigned char** buf_array = (unsigned char**)malloc(sizeof(char*)*N); 
@@ -52,15 +52,15 @@ TestSearchHuge()
    }
 
    for(i = 0; i < N; ++i){
-     emdb_trie_update(&trie, buf_array[i], L, value[i]);
+     etdb_trie_update(&trie, buf_array[i], L, value[i]);
    }
-   printf("after huge search key=%d\n", emdb_trie_num_keys(&trie));
-   long int time_stamp_1 = emdb_utls_get_timestamp();
+   printf("after huge search key=%d\n", etdb_trie_num_keys(&trie));
+   long int time_stamp_1 = etdb_utls_get_timestamp();
    for(i = 0; i < N; ++i){
-     int64_t v = emdb_trie_exact_match_search(&trie, buf_array[i], L);
+     int64_t v = etdb_trie_exact_match_search(&trie, buf_array[i], L);
      assert(v == value[i]);
    }
-   printf("Huge Search Success, Time: %d(ms)/%d queries\n", (emdb_utls_get_timestamp() - time_stamp_1)/1000, N);
+   printf("Huge Search Success, Time: %d(ms)/%d queries\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, N);
 }
 
 int 
