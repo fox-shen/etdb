@@ -74,9 +74,9 @@ etdb_resp_parse_req(etdb_connection_t *conn)
     ++parsed; 
   }
 
-  char tmp__[256]; memset(tmp__, 0, sizeof(tmp__));
-  memcpy(tmp__, head, size);
-  fprintf(stderr, "%s %d", tmp__, size);
+#ifdef DEBUG
+  etdb_buf_dsp(buf_in);
+#endif
 
   while(size > 0){
     uint8_t *body = (uint8_t*)memchr(head, '\n', size);
@@ -84,10 +84,10 @@ etdb_resp_parse_req(etdb_connection_t *conn)
       break;
     ++body;
     int head_len = body - head;
-    if(head_len == 1 || (head_len == 2 && head[0] == '\r')){
+
+    if(head_len == 1 || (head_len == 2 && body[0] == '\n')){
       parsed += head_len;
       etdb_buf_decr(buf_in, parsed);
-fprintf(stderr, "xxxxxxxxxxxxxxxxxxx\n");
       return 0;
     }
     if(head[0] < '0' || head[0] > '9')   return -1;
@@ -103,7 +103,7 @@ fprintf(stderr, "xxxxxxxxxxxxxxxxxxx\n");
 
     size -= head_len + body_len;
     if(size < 0)  break;
-    
+ 
     etdb_bytes_t *new_bytes = etdb_connect_alloc_bytes(conn);
     etdb_bytes_set(new_bytes, body, body_len);
     etdb_queue_insert_tail(&(conn->recv_cmd.queue), &(new_bytes->queue)); 

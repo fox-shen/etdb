@@ -11,5 +11,6 @@ typedef struct{
 
 size_t etdb_str_split(etdb_str_t *s, uint8_t split, etdb_str_t *splits, size_t *split_num);
 void   etdb_str_tolower(uint8_t* data, size_t len);
+void etdb_fprintf(FILE *stream, const char *format, ...);
 
 #endif

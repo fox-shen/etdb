@@ -32,3 +32,41 @@ etdb_str_tolower(uint8_t* data, size_t len)
        data[pos] = 'a' + data[pos] - 'A';
   }
 }
+
+static void
+etdb_vslprintf(FILE *stream, const char *format, va_list args)
+{
+  char buf[1024]; char* pos = buf;
+  while(*format){
+    if(*format == '%'){
+      ++format; 
+      switch(*format){
+        case 'V':
+          {
+            etdb_str_t *v = va_arg(args, etdb_str_t*);
+            pos = memcpy(buf, v->data, v->len);
+            ++pos;
+            *pos = '\0';
+            fprintf(stream, "%s", buf);
+          }
+          break;
+        case 'd':
+         {
+            
+         }
+      }
+    }
+    ++format;
+  } 
+}
+
+void 
+etdb_fprintf(FILE *stream, const char *format, ...)
+{
+  u_char *p;
+  va_list args;
+
+  va_start(args, format);
+  etdb_vslprintf(stream, format, args);
+  va_end(args);
+}

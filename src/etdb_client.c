@@ -198,7 +198,9 @@ etdb_cli_cycle()
         char data[128];
         memset(data, 0, sizeof(data));
         memcpy(data, bb->str.data, bb->str.len);  
-        fprintf(stderr, "%s", data);
+        printf("%s\n", data);
+        fflush(stdout);
+        responsed = 1;
       }
     }
   }
