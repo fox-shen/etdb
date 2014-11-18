@@ -1,5 +1,7 @@
 #include <etdb.h>
 
+#define ETDB_MAX_PACKET_SIZE 32*1024*1024
+
 static int
 etdb_resp_parse_redis_req(etdb_connection_t *conn)
 {
@@ -37,12 +39,7 @@ etdb_resp_parse_redis_req(etdb_connection_t *conn)
     size   -= len + 2;
     parsed += len + 2;
 
-    if(etdb_queue_empty(&(conn->free_cmd.queue))){
-      new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool, sizeof(etdb_bytes_t));
-    }else{
-      new_bytes = (etdb_bytes_t*)(conn->free_cmd.queue.next);
-      etdb_queue_remove(&(new_bytes->queue));
-    }
+    new_bytes = etdb_connect_alloc_bytes(conn);
     etdb_bytes_set(new_bytes, ptr, len);
     etdb_queue_insert_tail(&(conn->recv_cmd.queue), &(new_bytes->queue));
     
@@ -68,24 +65,104 @@ etdb_resp_parse_req(etdb_connection_t *conn)
 
   size_t parsed           = 0;
   size_t size             = buf_in->size;
-  uint8_t* ptr            = buf_in->data;
+  uint8_t *head           = buf_in->data;
   etdb_bytes_t*  new_bytes;
 
-  while(size > 0 && (ptr[0] == '\n' || ptr[0] == '\r')){
+  while(size > 0 && (head[0] == '\n' || head[0] == '\r')){
+    ++head;
+    --size;
+    ++parsed; 
+  }
+
+  char tmp__[256]; memset(tmp__, 0, sizeof(tmp__));
+  memcpy(tmp__, head, size);
+  fprintf(stderr, "%s %d", tmp__, size);
+
+  while(size > 0){
+    uint8_t *body = (uint8_t*)memchr(head, '\n', size);
+    if(body == NULL)
+      break;
+    ++body;
+    int head_len = body - head;
+    if(head_len == 1 || (head_len == 2 && head[0] == '\r')){
+      parsed += head_len;
+      etdb_buf_decr(buf_in, parsed);
+fprintf(stderr, "xxxxxxxxxxxxxxxxxxx\n");
+      return 0;
+    }
+    if(head[0] < '0' || head[0] > '9')   return -1;
     
-  } 
+    char head_str[16];
+    if(head_len > (int)sizeof(head_str) - 1)  return -1;
+
+    memcpy(head_str, head, head_len - 1);
+    head_str[head_len - 1] = '\0';
+
+    int body_len = atoi(head_str);
+    if(body_len < 0)   return -1;
+
+    size -= head_len + body_len;
+    if(size < 0)  break;
+    
+    etdb_bytes_t *new_bytes = etdb_connect_alloc_bytes(conn);
+    etdb_bytes_set(new_bytes, body, body_len);
+    etdb_queue_insert_tail(&(conn->recv_cmd.queue), &(new_bytes->queue)); 
+
+    head += head_len + body_len;
+    parsed += head_len + body_len;
+    if(size > 0 && head[0] == '\n'){
+      head   += 1;
+      size   -= 1;
+      parsed += 1;
+    }else if(size > 1 && head[0] == '\r' && head[1] == '\n'){
+      head   += 2;
+      size   -= 2;
+      parsed += 2;
+    }else
+      break;
+        
+    if(parsed > ETDB_MAX_PACKET_SIZE)
+      return -1;
+  }
+  if(!etdb_queue_empty(&(conn->recv_cmd.queue))){
+    etdb_queue_add(&(conn->free_cmd.queue), &(conn->recv_cmd.queue));
+    etdb_queue_init(&(conn->recv_cmd.queue));
+  }
+  return 1;
 }
 
 static void
 etdb_resp_tolower(etdb_bytes_t* recv_cmd)
 {
   recv_cmd = (etdb_bytes_t*)recv_cmd->queue.next;
-  etdb_str_tolower(recv_cmd->data, recv_cmd->size);
+  etdb_str_tolower(recv_cmd->str.data, recv_cmd->str.len);
 }
 
 int
-etdb_resp_recv_req(etdb_connection_t *conn)
+etdb_resp_recv_redis_req(etdb_connection_t *conn)
 {
+  int ret = etdb_resp_parse_redis_req(conn);
+  if(ret == -1)
+    return -1;
+
+  if(etdb_queue_empty(&(conn->recv_cmd.queue))){
+    if(etdb_buf_space(conn->buf_in) == 0){
+      etdb_buf_nice(conn->buf_in);
+      if(etdb_buf_space(conn->buf_in) == 0){
+        if(etdb_buf_grow(conn->buf_in) == -1){
+          return -1;
+        }
+      }
+    }
+    return 1;
+  }
+ 
+  etdb_resp_tolower(&(conn->recv_cmd)); 
+}
+
+int 
+etdb_resp_recv_req(etdb_connection_t *conn)
+{ 
   int ret = etdb_resp_parse_req(conn);
   if(ret == -1)
     return -1;
@@ -104,3 +181,4 @@ etdb_resp_recv_req(etdb_connection_t *conn)
  
   etdb_resp_tolower(&(conn->recv_cmd)); 
 }
+

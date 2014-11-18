@@ -31,9 +31,9 @@ etdb_module_init()
 }
 
 etdb_command_t* 
-etdb_module_find_command(etdb_bytes_t* bytes)
+etdb_module_find_command(etdb_str_t *str)
 {
-  int64_t value_insert = etdb_trie_exact_match_search(&etdb_command_trie, bytes->data, bytes->size);
+  int64_t value_insert = etdb_trie_exact_match_search(&etdb_command_trie, str->data, str->len);
   if(value_insert == ETDB_TRIE_NO_VALUE){
     return NULL;
   }

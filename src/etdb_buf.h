@@ -17,6 +17,6 @@ void etdb_buf_nice(etdb_buf_t *buf);
 #define etdb_buf_decr(buf, num)  buf->size -= num; buf->data += num
 int etdb_buf_grow(etdb_buf_t *buf);
 #define etdb_buf_slot(buf)       (buf->data + buf->size)
-int etdb_buf_append_record(etdb_buf_t *buf, etdb_bytes_t *bytes);
+int etdb_buf_append_record(etdb_buf_t *buf, etdb_str_t *str);
 
 #endif

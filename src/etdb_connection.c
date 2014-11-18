@@ -149,8 +149,21 @@ etdb_connect_accept(etdb_connection_t *conn)
   return new_conn;
 }
 
+etdb_bytes_t* 
+etdb_connect_alloc_bytes(etdb_connection_t *conn)
+{
+  etdb_bytes_t *new_bytes = NULL;
+  if(etdb_queue_empty(&(conn->free_cmd.queue))){
+     new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool, sizeof(etdb_bytes_t));
+  }else{
+    new_bytes = (etdb_bytes_t*)(conn->free_cmd.queue.next);
+    etdb_queue_remove(&(new_bytes->queue));
+  }
+  return new_bytes;
+}
+
 int 
-etdb_connect_read(etdb_connection_t *conn)
+etdb_connect_read_to_buf(etdb_connection_t *conn)
 {
   int ret = 0;
   int want;
@@ -190,23 +203,30 @@ etdb_connect_recv(etdb_connection_t *conn)
   size_t size   = conn->buf_in->size; 
   uint8_t *head = conn->buf_in->data;
  
-  if(head[0] == '*'){
-    if( etdb_resp_recv_req(conn) < 0)
+  if(head[0] == '*'){ /*** redis protocol  ***/
+    if( etdb_resp_recv_redis_req(conn) < 0)
       return NULL;
     else
       return &(conn->recv_cmd);
+  }else{
+    if( etdb_resp_recv_req(conn) < 0 )
+      return NULL;
+    else
+      return &(conn->recv_cmd); 
   } 
   return NULL;
 }
 
 void 
-etdb_connect_send(etdb_connection_t *conn, etdb_bytes_t *resp)
+etdb_connect_send_to_buf(etdb_connection_t *conn, etdb_bytes_t *resp)
 {
   etdb_queue_t *q = (resp->queue.next); 
   for(; q != &(resp->queue); q = q->next){
     etdb_bytes_t *bytes = (etdb_bytes_t*)q;
-    etdb_buf_append_record(conn->buf_out, bytes);
+    etdb_buf_append_record(conn->buf_out, &(bytes->str));
   }
+  etdb_str_t fin_str = etdb_string("\n");
+  etdb_buf_append_record(conn->buf_out, &fin_str);
 }
 
 int 
@@ -236,8 +256,4 @@ etdb_connect_write(etdb_connection_t *conn)
   return ret;
 }
 
-etdb_bytes_t* 
-etdb_connect_alloc_bytes(etdb_connection_t *conn)
-{
-  
-}
+

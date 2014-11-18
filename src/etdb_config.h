@@ -31,6 +31,6 @@ struct etdb_module_s{
 #define etdb_null_module {etdb_null_string, NULL}
 
 int etdb_module_init();
-etdb_command_t* etdb_module_find_command(etdb_bytes_t* bytes);
+etdb_command_t* etdb_module_find_command(etdb_str_t *str);
 
 #endif

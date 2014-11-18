@@ -114,7 +114,7 @@ etdb_master_cycle()
       }
       else if(ev->events & FDEVENT_IN)
       { /*** read data ****/
-        int len = etdb_connect_read(cur_conn); 
+        int len = etdb_connect_read_to_buf(cur_conn); 
         if(len <= 0){
           --etdb_conn_cnt;
           etdb_event_mgr_del(&etdb_event_mgr, ETDB_CONN_FD(cur_conn));
@@ -122,7 +122,6 @@ etdb_master_cycle()
         }else{
           etdb_queue_insert_tail(&(conn_ready_list_1.queue), &(cur_conn->queue));       
         }
-fprintf(stderr, "read-data\n");
       }
       else if(ev->events & FDEVENT_OUT)
       { /*** write data ****/
@@ -139,7 +138,6 @@ fprintf(stderr, "read-data\n");
             etdb_event_mgr_set(&etdb_event_mgr, ETDB_CONN_FD(cur_conn), FDEVENT_IN, 1, cur_conn);
           }
         }
-fprintf(stderr, "write-data\n");
       }
     }
 

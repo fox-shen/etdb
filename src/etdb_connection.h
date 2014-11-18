@@ -33,12 +33,11 @@ etdb_connection_t* etdb_connect_request(const char *ip, int port);
 etdb_connection_t* etdb_connect_listen(const char *ip,  int port);
 etdb_connection_t* etdb_connect_accept(etdb_connection_t *conn);
 #define ETDB_CONN_FD(conn) (conn->sock)
-
-int etdb_connect_read(etdb_connection_t *conn);
-etdb_bytes_t* etdb_connect_recv(etdb_connection_t *conn);
-void etdb_connect_send(etdb_connection_t *conn, etdb_bytes_t *resp);
-int etdb_connect_write(etdb_connection_t *conn);
-
 etdb_bytes_t* etdb_connect_alloc_bytes(etdb_connection_t *conn);
+
+int etdb_connect_read_to_buf(etdb_connection_t *conn);
+etdb_bytes_t* etdb_connect_recv(etdb_connection_t *conn);
+void etdb_connect_send_to_buf(etdb_connection_t *conn, etdb_bytes_t *resp);
+int etdb_connect_write(etdb_connection_t *conn);
 
 #endif

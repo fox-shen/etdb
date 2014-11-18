@@ -34,26 +34,26 @@ etdb_buf_grow(etdb_buf_t *buf)
 }
 
 int 
-etdb_buf_append_record(etdb_buf_t *buf, etdb_bytes_t *bytes)
+etdb_buf_append_record(etdb_buf_t *buf, etdb_str_t *str)
 {
-  size_t size = 16 + bytes->size + 1;
+  size_t size = 16 + str->len + 1;
   while(size > etdb_buf_space(buf)){
     if(etdb_buf_grow(buf) == -1)
       return -1;
   }
 
   char len[16];
-  int num = snprintf(len, sizeof(len), "%d\n", (int)bytes->size);
+  int num = snprintf(len, sizeof(len), "%d\n", (int)str->len);
 
   char *p = etdb_buf_slot(buf);
   memcpy(p, len, num);
   p += num;
 
-  memcpy(p, bytes->data, bytes->size);
-  p += bytes->size;
+  memcpy(p, str->data, str->len);
+  p += str->len;
 
   *p = '\n';
   p += 1;
-  buf->size += (num + bytes->size + 1);
-  return num + bytes->size + 1;    
+  buf->size += (num + str->len + 1);
+  return num + str->len + 1;    
 }
