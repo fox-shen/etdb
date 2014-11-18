@@ -9,7 +9,9 @@ emdb_module_init()
   int pos = 0, idx = 0;
   emdb_trie_init(&emdb_command_trie); 
   
-  while(emdb_modules[pos].module_name.data != NULL){
+  for(; emdb_modules[pos].module_name.data != NULL; pos++){
+    if(emdb_modules[pos].commands == NULL)  continue;
+
     int64_t value = 0;
     emdb_modules[pos].module_id = pos;
     value         = pos;
@@ -23,9 +25,7 @@ emdb_module_init()
                         emdb_modules[pos].commands[idx].name.len,
                         value_insert);
        idx++; 
-    }   
-  
-    pos++;
+    }
   }
   return 0;
 }
@@ -35,7 +35,6 @@ emdb_module_find_command(emdb_bytes_t* bytes)
 {
   int64_t value_insert = emdb_trie_exact_match_search(&emdb_command_trie, bytes->data, bytes->size);
   if(value_insert == EMDB_TRIE_NO_VALUE){
-    fprintf(stderr, "not found command\n");
     return NULL;
   }
   int64_t pos = value_insert >> 32;

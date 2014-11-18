@@ -27,12 +27,13 @@
 #include <emdb_queue.h>
 #include <emdb_stack.h>
 #include <emdb_version.h>
-#include <emdb_buf.h>
 #include <emdb_bytes.h>
+#include <emdb_buf.h>
 
 #include <emdb_connection.h>
 #include <emdb_event.h>
 #include <emdb_resp.h>
+#include <emdb_serv.h>
 
 #include <emdb_geo_hash.h>
 #include <emdb_trie.h>

@@ -1,7 +1,7 @@
 #include <emdb.h>
 
 static int
-emdb_resp_parse_req(emdb_connection_t *conn)
+emdb_resp_parse_redis_req(emdb_connection_t *conn)
 {
   emdb_buf_t*   buf_in    = conn->buf_in;
   emdb_bytes_t* bytes_ptr = &(conn->recv_cmd);
@@ -58,6 +58,22 @@ emdb_resp_parse_req(emdb_connection_t *conn)
     emdb_queue_init(&(conn->recv_cmd.queue));
   }
   return 1;
+}
+
+static int
+emdb_resp_parse_req(emdb_connection_t *conn)
+{
+  emdb_buf_t*   buf_in    = conn->buf_in;
+  emdb_bytes_t* bytes_ptr = &(conn->recv_cmd);
+
+  size_t parsed           = 0;
+  size_t size             = buf_in->size;
+  uint8_t* ptr            = buf_in->data;
+  emdb_bytes_t*  new_bytes;
+
+  while(size > 0 && (ptr[0] == '\n' || ptr[0] == '\r')){
+    
+  } 
 }
 
 static void

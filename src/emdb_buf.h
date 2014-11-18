@@ -17,5 +17,6 @@ void emdb_buf_nice(emdb_buf_t *buf);
 #define emdb_buf_decr(buf, num)  buf->size -= num; buf->data += num
 int emdb_buf_grow(emdb_buf_t *buf);
 #define emdb_buf_slot(buf)       (buf->data + buf->size)
+int emdb_buf_append_record(emdb_buf_t *buf, emdb_bytes_t *bytes);
 
 #endif

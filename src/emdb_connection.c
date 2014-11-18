@@ -196,4 +196,48 @@ emdb_connect_recv(emdb_connection_t *conn)
     else
       return &(conn->recv_cmd);
   } 
+  return NULL;
+}
+
+void 
+emdb_connect_send(emdb_connection_t *conn, emdb_bytes_t *resp)
+{
+  emdb_queue_t *q = (resp->queue.next); 
+  for(; q != &(resp->queue); q = q->next){
+    emdb_bytes_t *bytes = (emdb_bytes_t*)q;
+    emdb_buf_append_record(conn->buf_out, bytes);
+  }
+}
+
+int 
+emdb_connect_write(emdb_connection_t *conn)
+{
+  int ret = 0;
+  int want;
+  while((want = conn->buf_out->size) > 0){
+    int len = write(conn->sock, conn->buf_out->data, want);
+    if(len == -1){
+      if(errno == EINTR){
+        continue;
+      }else if(errno == EWOULDBLOCK){
+        break;
+      }else
+        return -1;
+    }else{
+      if(len == 0)
+        break;
+      ret += len;
+      emdb_buf_decr(conn->buf_out, len);
+    }
+    if(!conn->noblock)
+      break;
+  } 
+  emdb_buf_nice(conn->buf_out);
+  return ret;
+}
+
+emdb_bytes_t* 
+emdb_connect_alloc_bytes(emdb_connection_t *conn)
+{
+  
 }

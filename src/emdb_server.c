@@ -122,10 +122,24 @@ emdb_master_cycle()
         }else{
           emdb_queue_insert_tail(&(conn_ready_list_1.queue), &(cur_conn->queue));       
         }
+fprintf(stderr, "read-data\n");
       }
       else if(ev->events & FDEVENT_OUT)
       { /*** write data ****/
-         
+        int len = emdb_connect_write(cur_conn);
+        if(len <= 0){
+          --emdb_conn_cnt;
+          emdb_event_mgr_del(&emdb_event_mgr, EMDB_CONN_FD(cur_conn));
+          emdb_connect_close(cur_conn);
+        }else if(cur_conn->buf_out->size == 0){
+          emdb_event_mgr_ctr(&emdb_event_mgr, EMDB_CONN_FD(cur_conn), FDEVENT_OUT);
+          if(cur_conn->buf_in->size != 0){
+            emdb_queue_insert_tail(&(conn_ready_list_1.queue), &(cur_conn->queue));
+          }else{
+            emdb_event_mgr_set(&emdb_event_mgr, EMDB_CONN_FD(cur_conn), FDEVENT_IN, 1, cur_conn);
+          }
+        }
+fprintf(stderr, "write-data\n");
       }
     }
 
@@ -145,8 +159,8 @@ emdb_master_cycle()
           emdb_event_mgr_set(&emdb_event_mgr, EMDB_CONN_FD(conn), FDEVENT_IN, 1, conn);  
         }
         continue;
-      }
-      emdb_command_t* cmd = emdb_module_find_command((emdb_bytes_t*)(req->queue.next));
+      }      
+      emdb_serv_exec_proc(req, conn);
     }
   }   
 }

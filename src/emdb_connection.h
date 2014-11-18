@@ -36,5 +36,9 @@ emdb_connection_t* emdb_connect_accept(emdb_connection_t *conn);
 
 int emdb_connect_read(emdb_connection_t *conn);
 emdb_bytes_t* emdb_connect_recv(emdb_connection_t *conn);
+void emdb_connect_send(emdb_connection_t *conn, emdb_bytes_t *resp);
+int emdb_connect_write(emdb_connection_t *conn);
+
+emdb_bytes_t* emdb_connect_alloc_bytes(emdb_connection_t *conn);
 
 #endif

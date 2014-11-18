@@ -7,7 +7,7 @@ typedef struct emdb_bytes_s{
   int             size;
 }emdb_bytes_t;
 
-#define emdb_bytes_set(emdb_bytes, ptr, len) {emdb_bytes->data = ptr; emdb_bytes->size = len;}
+#define emdb_bytes_set(emdb_bytes, ptr, len) {(emdb_bytes)->data = ptr; (emdb_bytes)->size = len;}
 #define emdb_bytes_compare(b1, b2, r)                                        \
 {                                                                            \
    const int min_len = b1->size < b2->size ? b1->size : b2->size;            \

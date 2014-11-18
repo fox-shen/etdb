@@ -33,4 +33,27 @@ emdb_buf_grow(emdb_buf_t *buf)
   return 0;
 }
 
+int 
+emdb_buf_append_record(emdb_buf_t *buf, emdb_bytes_t *bytes)
+{
+  size_t size = 16 + bytes->size + 1;
+  while(size > emdb_buf_space(buf)){
+    if(emdb_buf_grow(buf) == -1)
+      return -1;
+  }
 
+  char len[16];
+  int num = snprintf(len, sizeof(len), "%d\n", (int)bytes->size);
+
+  char *p = emdb_buf_slot(buf);
+  memcpy(p, len, num);
+  p += num;
+
+  memcpy(p, bytes->data, bytes->size);
+  p += bytes->size;
+
+  *p = '\n';
+  p += 1;
+  buf->size += (num + bytes->size + 1);
+  return num + bytes->size + 1;    
+}
