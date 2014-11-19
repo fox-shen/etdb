@@ -1,16 +1,7 @@
-#Macros
-SUBDIRS = src test
 
-#Actions
-all : clean
-	@for X in $(SUBDIRS); \
-	do \
-	    cd $$X; make VERSION=$(VERSION); cd -; \
-	done
+all : 
+	cd objs; make;
 
 clean :
-	@for X in $(SUBDIRS); \
-	do \
-	    cd $$X; make clean; cd -; \
-	done
+	cd objs; make clean; cd ..;
 
