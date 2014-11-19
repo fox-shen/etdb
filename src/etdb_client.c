@@ -89,14 +89,16 @@ etdb_cli_handle_user_cmd(uint8_t *cmd, size_t len)
   etdb_str_t raw_input = { len, cmd};
   etdb_str_t splits[256];
   size_t splits_num = 256, idx = 0;
+
   etdb_str_split(&raw_input, ' ', splits, &splits_num);
   for(; idx < splits_num; ++idx){
-    if(splits[idx].len != 0)
+    if(splits[idx].len != 0){
       etdb_buf_append_record(etdb_cli_conn->buf_out, &splits[idx]);
+    }
   }
   etdb_str_t fin_str = etdb_string("\n");
   etdb_buf_append_record(etdb_cli_conn->buf_out, &fin_str);
-
+ 
   size_t size = etdb_cli_conn->buf_out->size;
   if(etdb_connect_write(etdb_cli_conn) != size){
     if(!etdb_event_mgr_isset(&etdb_event_mgr, ETDB_CONN_FD(etdb_cli_conn), FDEVENT_OUT)){
@@ -111,15 +113,17 @@ etdb_cli_cycle()
   const etdb_event_t *events = NULL;
   etdb_queue_t *q;
   short int responsed = 1;
-  char buf[4096];
+  char *buf;
   etdb_connection_t conn_ready_list;
+  char title[256];
+  sprintf(title, "%s:%d>", etdb_serv_ip, etdb_serv_port);
 
   while(!etdb_quit)
   {
     if(responsed == 1)
     {
-      printf("%s:%d>", etdb_serv_ip, etdb_serv_port);
-      scanf("%s", buf);
+      buf = linenoise(title);
+      if(buf == NULL)   break; 
 
       etdb_cli_handle_user_cmd(buf, strlen(buf));
       responsed = 0;

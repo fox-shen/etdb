@@ -21,6 +21,8 @@
 #include <sys/epoll.h>
 #include <signal.h>
 
+#include <linenoise.h>
+
 #include <etdb_alloc.h>
 #include <etdb_palloc.h>
 #include <etdb_time.h>

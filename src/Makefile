@@ -12,7 +12,7 @@ all : clean $(LIBS) $(EXES)
 clean : 
 	rm -r -f *.o $(LIB) $(EXES)
 
-libetdb.a: etdb_time.o etdb_alloc.o etdb_palloc.o etdb_trie.o etdb_log.o etdb_config.o etdb_string.o etdb_geo_hash.o etdb_stack.o etdb_event.o etdb_connection.o etdb_serv.o etdb_modules.o etdb_buf.o etdb_resp.o etdb_serv.o 
+libetdb.a: etdb_time.o etdb_alloc.o etdb_palloc.o etdb_trie.o etdb_log.o etdb_config.o etdb_string.o etdb_geo_hash.o etdb_stack.o etdb_event.o etdb_connection.o etdb_serv.o etdb_modules.o etdb_buf.o etdb_resp.o etdb_serv.o linenoise.o 
 	ar cr $@ $^
 
 etdb: etdb_server.o
