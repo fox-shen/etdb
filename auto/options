@@ -1,0 +1,14 @@
+#!/bin/sh
+
+ETDB_ADDONS=
+
+for option
+do
+  case $option in
+    --add-module=*)   ETDB_ADDONS="$ETDB_ADDONS $value";;
+    *)  
+       echo "$0: error: invalid option \"$option\"" 
+       exit 1
+    ;; 
+  esac
+done

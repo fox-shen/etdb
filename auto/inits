@@ -1,0 +1,5 @@
+#!/bin/sh
+
+ETDB_OBJS="objs"
+ETDB_MAKEFILE="Makefile"
+ETDB_OBJS_MAKEFILE="$ETDB_OBJS/Makefile"

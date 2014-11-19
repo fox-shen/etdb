@@ -1,0 +1,26 @@
+#!/bin/sh
+
+ETDB_INCS="src"
+
+ETDB_LIB_SRCS="src/etdb_alloc.c \
+               src/etdb_buf.c \
+               src/etdb_config.c \
+               src/etdb_connection.c \
+               src/etdb_event.c \
+               src/etdb_geo_hash.c \
+               src/etdb_log.c \
+               src/etdb_modules.c \
+               src/etdb_palloc.c \
+               src/etdb_resp.c \
+               src/etdb_serv.c \
+               src/etdb_stack.c \
+               src/etdb_string.c \
+               src/etdb_time.c \
+               src/etdb_trie.c \
+               src/linenoise.c"
+
+ETDB_TEST_SRCS="test/etdb_test_alloc.c \
+                test/etdb_test_string.c \
+                test/etdb_test_trie_erase.c \
+                test/etdb_test_trie_search.c \
+                test/etdb_test_trie_update.c"

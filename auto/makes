@@ -1,0 +1,123 @@
+#!/bin/sh
+
+mkdir -p $ETDB_OBJS/src $ETDB_OBJS/test
+
+cat << END > $ETDB_MAKEFILE
+
+all : 
+	cd objs; make;
+
+clean :
+	cd objs; make clean; cd ..;
+
+END
+
+cat << END > $ETDB_OBJS_MAKEFILE
+
+CC = cc
+CFLAGS = $CFLAGS
+LIBS = libetdb.a
+EXES = etdb_server etdb_cli
+SYSLIBS = -lpthread -lm -lrt -lcrypto -lssl -lidn
+END
+
+for test_src_file_c in $ETDB_TEST_SRCS
+do
+test_src_file_exe=`echo $test_src_file_c | sed 's/\.c//g'`
+TESTS="$TESTS ../$test_src_file_exe"
+done
+
+cat << END >> $ETDB_OBJS_MAKEFILE
+TESTS = $TESTS
+
+all : \$(LIBS) \$(EXES) \$(TESTS)
+
+clean : 
+	rm -r -f src/* test/* \$(LIBS) \$(EXES)
+
+END
+
+###
+### DEF INCS
+###
+ETDB_INCLUDES=
+for inc in $ETDB_INCS
+do
+  ETDB_INCLUDES="$ETDB_INCLUDES -I ../$inc"
+done
+
+###
+### libetdb.a generate
+###
+LIBETDB_OBJS="libetdb.a:"
+for lib_src_file_c in $ETDB_LIB_SRCS
+do
+   lib_src_file_o=`echo $lib_src_file_c | sed 's/\.c/\.o/g'`
+   LIBETDB_OBJS="$LIBETDB_OBJS $lib_src_file_o"
+done
+
+cat << END >> $ETDB_OBJS_MAKEFILE
+
+$LIBETDB_OBJS
+	ar cr \$@ $^ 
+
+END
+
+###
+### .o generate
+###
+for lib_src_file_c in $ETDB_LIB_SRCS
+do
+   lib_src_file_o=`echo $lib_src_file_c | sed 's/\.c/\.o/g'`
+   echo $lib_src_file_o:../$lib_src_file_c >> $ETDB_OBJS_MAKEFILE
+   echo "	\$(CC) -c \$(CFLAGS) $ETDB_INCLUDES -o $lib_src_file_o ../$lib_src_file_c"  >> $ETDB_OBJS_MAKEFILE
+   echo "" >> $ETDB_OBJS_MAKEFILE
+done
+
+
+###
+### etdb_server generate
+###
+cat << END >> $ETDB_OBJS_MAKEFILE
+
+etdb_server:src/etdb_server.o
+	\$(CC) \$(CFLAGS) src/etdb_server.o -o etdb_server \$(SYSLIBS) \$(LIBS)
+
+src/etdb_server.o:../src/etdb_server.c
+	\$(CC) -c \$(CFLAGS) $ETDB_INCLUDES -o src/etdb_server.o ../src/etdb_server.c
+
+END
+
+###
+### etdb_client generate
+###
+cat << END >> $ETDB_OBJS_MAKEFILE
+
+etdb_cli:src/etdb_client.o
+	\$(CC) \$(CFLAGS) src/etdb_client.o -o etdb_cli \$(SYSLIBS) \$(LIBS)
+
+src/etdb_client.o:../src/etdb_client.c
+	\$(CC) -c \$(CFLAGS) $ETDB_INCLUDES -o src/etdb_client.o ../src/etdb_client.c
+
+END
+
+###
+### etdb_test_unit generate
+###
+for test_src_file_c in $ETDB_TEST_SRCS
+do
+test_src_file_o=`echo $test_src_file_c | sed 's/\.c/\.o/g'`
+test_src_file_exe=`echo $test_src_file_c | sed 's/\.c//g'`
+
+cat << END >> $ETDB_OBJS_MAKEFILE
+
+../$test_src_file_exe:$test_src_file_o
+	\$(CC) \$(CFLAGS) $test_src_file_o -o ../$test_src_file_exe \$(SYSLIBS) \$(LIBS)
+
+$test_src_file_o:../$test_src_file_c
+	\$(CC) -c \$(CFLAGS) $ETDB_INCLUDES -o $test_src_file_o ../$test_src_file_c
+
+END
+
+done
+

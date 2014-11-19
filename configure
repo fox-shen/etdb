@@ -1,0 +1,7 @@
+#!/bin/sh
+
+. auto/options
+. auto/inits
+test -d $ETDB_OBJS || mkdir $ETDB_OBJS
+. auto/sources
+. auto/makes
