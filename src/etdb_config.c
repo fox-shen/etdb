@@ -1,7 +1,7 @@
 #include <etdb.h>
 
 etdb_trie_t etdb_command_trie;
-extern etdb_module_t etdb_modules[]; 
+extern etdb_module_t* etdb_modules[]; 
 
 int 
 etdb_module_init()
@@ -9,20 +9,20 @@ etdb_module_init()
   int pos = 0, idx = 0;
   etdb_trie_init(&etdb_command_trie); 
   
-  for(; etdb_modules[pos].module_name.data != NULL; pos++){
-    if(etdb_modules[pos].commands == NULL)  continue;
+  for(; etdb_modules[pos] != NULL; pos++){
+    if(etdb_modules[pos]->commands == NULL)  continue;
 
     int64_t value = 0;
-    etdb_modules[pos].module_id = pos;
+    etdb_modules[pos]->module_id = pos;
     value         = pos;
     value         = value << 32;
 
     idx           = 0;
-    while(etdb_modules[pos].commands[idx].name.data != NULL){
+    while(etdb_modules[pos]->commands[idx].name.data != NULL){
        int64_t value_insert = value | idx;
        etdb_trie_update(&etdb_command_trie, 
-                        etdb_modules[pos].commands[idx].name.data,
-                        etdb_modules[pos].commands[idx].name.len,
+                        etdb_modules[pos]->commands[idx].name.data,
+                        etdb_modules[pos]->commands[idx].name.len,
                         value_insert);
        idx++; 
     }
@@ -39,5 +39,5 @@ etdb_module_find_command(etdb_str_t *str)
   }
   int64_t pos = value_insert >> 32;
   int64_t idx = value_insert & 0xffffffff;
-  return &(etdb_modules[pos].commands[idx]);
+  return &(etdb_modules[pos]->commands[idx]);
 }

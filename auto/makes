@@ -1,6 +1,6 @@
 #!/bin/sh
 
-mkdir -p $ETDB_OBJS/src $ETDB_OBJS/test
+mkdir -p $ETDB_OBJS/src $ETDB_OBJS/src/modules $ETDB_OBJS/test
 
 cat << END > $ETDB_MAKEFILE
 
@@ -33,7 +33,7 @@ TESTS = $TESTS
 all : \$(LIBS) \$(EXES) \$(TESTS)
 
 clean : 
-	rm -r -f src/* test/* \$(LIBS) \$(EXES)
+	rm -r -f src/*.o src/modules/*.o test/*.o \$(LIBS) \$(EXES)
 
 END
 

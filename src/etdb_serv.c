@@ -20,7 +20,7 @@ etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
     etdb_connect_send_to_buf(conn, &resp); 
     size_t space = etdb_buf_space(conn->buf_out);
   }else{
-    
+    cmd->handler(req, conn);    
   }
 
   if(conn->buf_out->size > 0){

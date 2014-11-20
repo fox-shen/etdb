@@ -1,7 +1,7 @@
 #ifndef H_ETDB_CONFIG_H
 #define H_ETDB_CONFIG_H
 
-typedef int (*etdb_command_handler)(void *serv, etdb_connection_t *conn); 
+typedef int (*etdb_command_handler)(etdb_bytes_t *args, etdb_connection_t *conn); 
 
 #define ETDB_CMD_FLAG_READ      (1<<0)
 #define ETDB_CMD_FLAG_WRITE     (1<<1)
@@ -19,7 +19,9 @@ struct etdb_command_s{
 };
 
 #define etdb_command_padding 0, 0, 0
-#define etdb_null_command {etdb_null_string, 0, NULL, 0, 0, 0}
+#define etdb_null_command etdb_null_string, 0, NULL, 0, 0, 0
+
+#define etdb_module_padding 0
 
 typedef struct etdb_module_s etdb_module_t;
 struct etdb_module_s{
