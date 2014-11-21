@@ -48,7 +48,7 @@ etdb_connect_keepalive(etdb_connection_t *conn, int enable)
 etdb_connection_t* 
 etdb_connect_request(const char *ip, int port)
 {
-  etdb_pool_t *pool;
+  etdb_pool_t *pool, *pool_temp;
   etdb_connection_t *conn;
   int sock = -1;
 
@@ -65,8 +65,10 @@ etdb_connect_request(const char *ip, int port)
     goto sock_err;
   }
   pool = etdb_create_pool(ETDB_CONNECTION_DEFAULT_POOL_SIZE);
+  pool_temp = etdb_create_pool(ETDB_CONNECTION_DEFAULT_POOL_SIZE);
   conn = etdb_pcalloc(pool, sizeof(etdb_connection_t));
   conn->pool = pool;
+  conn->pool_temp = pool_temp;
   conn->sock = sock;
   etdb_connect_keepalive(conn, 1);
   etdb_connect_init_buf(conn);
@@ -82,7 +84,7 @@ etdb_connection_t*
 etdb_connect_listen(const char *ip,  int port)
 {
   etdb_connection_t *conn;
-  etdb_pool_t *pool;
+  etdb_pool_t *pool, *pool_temp;
   int sock = -1;
 
   int opt = 1;
@@ -105,8 +107,10 @@ etdb_connect_listen(const char *ip,  int port)
     goto sock_err;
   }
   pool = etdb_create_pool(ETDB_CONNECTION_DEFAULT_POOL_SIZE);
+  pool_temp = etdb_create_pool(ETDB_CONNECTION_DEFAULT_POOL_SIZE);
   conn = etdb_pcalloc(pool, sizeof(etdb_connection_t));
   conn->pool = pool;
+  conn->pool_temp = pool_temp;
   conn->sock = sock;
   snprintf(conn->remote_ip, sizeof(conn->remote_ip), "%s", ip);
   conn->remote_port = port;
@@ -121,7 +125,7 @@ sock_err:
 etdb_connection_t* 
 etdb_connect_accept(etdb_connection_t *conn)
 {
-  etdb_pool_t       *pool;
+  etdb_pool_t       *pool, *pool_temp;
   etdb_connection_t *new_conn;
   int client_sock;
   struct sockaddr_in addr;
@@ -138,8 +142,10 @@ etdb_connect_accept(etdb_connection_t *conn)
   }
 
   pool       = etdb_create_pool(ETDB_CONNECTION_DEFAULT_POOL_SIZE);
+  pool_temp  = etdb_create_pool(ETDB_CONNECTION_DEFAULT_POOL_SIZE);
   new_conn   = etdb_pcalloc(pool, sizeof(etdb_connection_t));
   new_conn->pool = pool;
+  new_conn->pool_temp = pool_temp;
   new_conn->sock = client_sock;
   etdb_connect_keepalive(new_conn, 1);
   etdb_connect_init_buf(new_conn);

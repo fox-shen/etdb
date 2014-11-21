@@ -14,6 +14,7 @@ struct etdb_connection_s{
   int     remote_port;  
 
   etdb_pool_t *pool; 
+  etdb_pool_t *pool_temp;
 
   etdb_buf_t  *buf_in;
   etdb_buf_t  *buf_out;

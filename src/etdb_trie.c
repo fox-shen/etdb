@@ -61,11 +61,11 @@ etdb_trie_init(etdb_trie_t *trie)
   int i;
   memset(trie, 0, sizeof(etdb_trie_t));
   if(etdb_trie_node_realloc(&(trie->node),   256, 256) == 0)
-    return 0;
+    return -1;
   if(etdb_trie_ninfo_realloc(&(trie->ninfo), 256, 0) == 0)
-    return 0;
+    return -1;
   if(etdb_trie_block_realloc(&(trie->block), 1,   0) == 0)
-    return 0;
+    return -1;
 
 #ifdef ETDB_TRIE_REDUCED
   trie->node[0].base  = trie->node[0].check = -1; 
@@ -90,7 +90,7 @@ etdb_trie_init(etdb_trie_t *trie)
   trie->capacity       = trie->size = 256;
   for(i = 0; i < ETDB_TRIE_NUM_TRACKING_NODES; ++i)  trie->tracking_node[i] = 0;
   for(i = 0; i <= 256; ++i) trie->reject[i] = i + 1;
-  return 1;
+  return 0;
 }
 
 void
@@ -477,7 +477,7 @@ etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, int64_t value)
   int64_t from = 0;
   int64_t pos  = 0;
   if(len == 0)
-    return 0;
+    return -1;
   
   const uint8_t *key_uint8 = (const uint8_t*)key;
   int sp = 0;
@@ -494,7 +494,7 @@ etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, int64_t value)
   const int64_t to = etdb_trie_follow(trie, &from, 0);
 #endif
   trie->node[to].value = value;
-  return 1;
+  return 0;
 }
 
 static int64_t
@@ -600,9 +600,9 @@ etdb_trie_erase(etdb_trie_t *trie, const char *key, size_t len)
   int64_t from = 0, pos = 0;
   int64_t i = etdb_trie_find(trie, key, &from, pos, len);
   if(i == ETDB_TRIE_NO_PATH || i == ETDB_TRIE_NO_VALUE)
-    return 0;
+    return -1;
   etdb_trie_erase_impl(trie, from);
-  return 1;
+  return 0;
 }
 
 int64_t

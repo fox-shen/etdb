@@ -10,6 +10,12 @@ etdb_module_init()
   etdb_trie_init(&etdb_command_trie); 
   
   for(; etdb_modules[pos] != NULL; pos++){
+    if(etdb_modules[pos]->init_handler){
+      if( etdb_modules[pos]->init_handler(NULL) < 0 ){  
+        return -1;
+      }
+    }
+
     if(etdb_modules[pos]->commands == NULL)  continue;
 
     int64_t value = 0;
@@ -20,10 +26,11 @@ etdb_module_init()
     idx           = 0;
     while(etdb_modules[pos]->commands[idx].name.data != NULL){
        int64_t value_insert = value | idx;
-       etdb_trie_update(&etdb_command_trie, 
-                        etdb_modules[pos]->commands[idx].name.data,
-                        etdb_modules[pos]->commands[idx].name.len,
-                        value_insert);
+       if( etdb_trie_update(&etdb_command_trie, 
+                            etdb_modules[pos]->commands[idx].name.data,
+                            etdb_modules[pos]->commands[idx].name.len,
+                            value_insert) < 0 )
+         return -1;
        idx++; 
     }
   }

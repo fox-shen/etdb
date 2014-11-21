@@ -53,4 +53,6 @@ struct etdb_queue_s{
     (h)->prev = (n)->prev;                                                     \
     (h)->prev->next = h;
 
+int etdb_queue_count(etdb_queue_t *q);
+
 #endif
