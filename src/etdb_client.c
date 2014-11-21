@@ -194,15 +194,17 @@ etdb_cli_cycle()
       }
       
       etdb_queue_t *qq = req->queue.next;
-      for(; qq != &(req->queue); qq = qq->next){
-        etdb_bytes_t *bb = (etdb_bytes_t*)qq;
-        char data[128];
-        memset(data, 0, sizeof(data));
-        memcpy(data, bb->str.data, bb->str.len);  
-        printf("%s\n", data);
-        fflush(stdout);
-        responsed = 1;
-      }
+      int resp_cnt     = etdb_queue_count(&(req->queue));
+      etdb_bytes_t *bb = (etdb_bytes_t*)qq;
+      if(resp_cnt > 1)
+        bb = (etdb_bytes_t*)(qq->next);
+
+      char data[1024];
+      memset(data, 0, sizeof(data));
+      memcpy(data, bb->str.data, bb->str.len);  
+      printf("%s\n", data);
+      fflush(stdout);
+      responsed = 1;
     }
   }
 }
@@ -296,7 +298,7 @@ etdb_exec_benchmark_cycle(uint8_t** requests_data)
           fprintf(stdout, "request: %d, time: %d ms \n", 
                            etdb_request_num,
                            ((time_end - time_start)/1000));
-          exit(0);
+          return;
         }    
       }else{
         char err_str[1024];
@@ -310,7 +312,7 @@ etdb_exec_benchmark_cycle(uint8_t** requests_data)
 }
 
 static void
-etdb_exec_benchmark_set()
+etdb_exec_benchmark_kv()
 {
   int num = 0;
   uint8_t** requests_data = etdb_alloc(sizeof(char*)*etdb_request_num);
@@ -323,8 +325,15 @@ etdb_exec_benchmark_set()
     requests_data[num][strlen(pack_cmd)] = '\0';
     memcpy(requests_data[num], pack_cmd, strlen(pack_cmd));
   }
-  fprintf(stdout, "Set Benchmark\n"); 
+  fprintf(stdout, "Start Set Benchmark\n"); 
   etdb_exec_benchmark_cycle(requests_data);
+
+  for(num = 0; num < etdb_request_num; ++num){
+    memcpy(requests_data[num], "get", 3);
+    requests_data[num][strlen(requests_data[num]) - 2] = '\0';
+  }
+  fprintf(stdout, "Start Get Benchmark\n");
+  etdb_exec_benchmark_cycle(requests_data); 
 }
 
 int 
@@ -335,7 +344,7 @@ main(int argc, char **argv)
   if(!etdb_benchmark){
      etdb_cli_cycle();    
   }else{
-     etdb_exec_benchmark_set();
+     etdb_exec_benchmark_kv();
   }
   return 0;
 }

@@ -40,5 +40,6 @@ int etdb_connect_read_to_buf(etdb_connection_t *conn);
 etdb_bytes_t* etdb_connect_recv(etdb_connection_t *conn);
 void etdb_connect_send_to_buf(etdb_connection_t *conn, etdb_bytes_t *resp);
 int etdb_connect_write(etdb_connection_t *conn);
+int etdb_connect_send_cmd(etdb_connection_t *conn, uint8_t *cmd, size_t len);
 
 #endif

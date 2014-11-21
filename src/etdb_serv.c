@@ -49,23 +49,14 @@ etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
     etdb_connect_send_to_buf(conn, &resp);
   }else{
     int ret = cmd->handler(req, conn, &resp);
-    if(cmd->flags & ETDB_CMD_FLAG_WRITE){
-       etdb_bytes_t n;
-       if(ret == 0){ 
-         etdb_bytes_set(&n, "+OK", sizeof("+OK") - 1);
-       }else{
-         etdb_bytes_set(&n, "+FAIL", sizeof("+FAIL") - 1);
-       }
-       etdb_queue_insert_tail(&(resp.queue), &(n.queue));
-       etdb_connect_send_to_buf(conn, &resp); 
+    etdb_bytes_t n;
+    if(ret == 0){ 
+      etdb_bytes_set(&n, "+OK", sizeof("+OK") - 1);
     }else{
-      etdb_bytes_t n;
-      if(ret < 0){
-        etdb_bytes_set(&n, "+Not Found", sizeof("+Not Found") -1);
-        etdb_queue_insert_tail(&(resp.queue), &(n.queue));
-      }
-      etdb_connect_send_to_buf(conn, &resp); 
-    }   
+      etdb_bytes_set(&n, "+FAIL", sizeof("+FAIL") - 1);
+    }
+    etdb_queue_insert_head(&(resp.queue), &(n.queue));
+    etdb_connect_send_to_buf(conn, &resp);   
   }
 
   if(conn->buf_out->size > 0){
