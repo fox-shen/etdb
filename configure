@@ -5,3 +5,5 @@
 test -d $ETDB_OBJS || mkdir $ETDB_OBJS
 . auto/sources
 . auto/makes
+
+echo "Configure Success, Just Make It"

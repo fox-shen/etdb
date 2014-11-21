@@ -601,8 +601,9 @@ etdb_trie_erase(etdb_trie_t *trie, const char *key, size_t len)
 {
   int64_t from = 0, pos = 0;
   int64_t i = etdb_trie_find(trie, key, &from, pos, len);
-  if(i == ETDB_TRIE_NO_PATH || i == ETDB_TRIE_NO_VALUE)
+  if(i == ETDB_TRIE_NO_PATH || i == ETDB_TRIE_NO_VALUE){
     return -1;
+  }
   etdb_trie_erase_impl(trie, from);
   return 0;
 }

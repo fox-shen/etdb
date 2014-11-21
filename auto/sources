@@ -42,9 +42,11 @@ cat << END > src/etdb_modules.c
 #include <etdb.h>
 
 extern etdb_module_t etdb_kv_module;
+extern etdb_module_t etdb_hash_module;
 
 etdb_module_t* etdb_modules[]={
   &etdb_kv_module,
+  &etdb_hash_module,
   NULL
 };
 
