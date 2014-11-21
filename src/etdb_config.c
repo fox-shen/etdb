@@ -48,3 +48,4 @@ etdb_module_find_command(etdb_str_t *str)
   int64_t idx = value_insert & 0xffffffff;
   return &(etdb_modules[pos]->commands[idx]);
 }
+

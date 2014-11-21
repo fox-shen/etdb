@@ -2,6 +2,8 @@
 
 ETDB_ADDONS=
 
+echo "Parsing New Modules"
+
 for option
 do
   case $option in

@@ -20,9 +20,7 @@ static void
 etdb_print_usage(int argc, char **argv)
 {
   printf("Usage:\n");
-  printf("     %s [-d] /path/to/etdb.conf\n", argv[0]);
-  printf("Options:\n");
-  printf("     -d   run as daemon\n");
+  printf("     %s /path/to/etdb.conf\n", argv[0]);
 }
 
 static void
@@ -65,8 +63,10 @@ etdb_init(int argc, char **argv)
     etdb_print_usage(argc, argv);
     exit(1);
   }
+  etdb_init_file_config(argv[1]);
   etdb_init_server_conn();
   etdb_init_signal();
+  etdb_database_init();
   if(etdb_module_init() < 0){
     exit(0);
   }
@@ -163,11 +163,18 @@ etdb_master_cycle()
   }   
 }
 
+void
+etdb_server_exit()
+{
+   
+}
+
 int
 main(int argc, char **argv)
 {
   etdb_print_welcome();
   etdb_init(argc, argv);
   etdb_master_cycle();
+  etdb_server_exit();
   return 0;
 }

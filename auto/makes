@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Generate Makefile"
+
 mkdir -p $ETDB_OBJS/src $ETDB_OBJS/src/modules $ETDB_OBJS/test
 
 cat << END > $ETDB_MAKEFILE

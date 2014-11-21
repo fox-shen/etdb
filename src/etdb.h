@@ -41,7 +41,7 @@
 #include <etdb_geo_hash.h>
 #include <etdb_trie.h>
 
-#include <etdb_serv.h>
+#include <etdb_database.h>
 #include <etdb_config.h>
 
 #endif

@@ -471,7 +471,7 @@ etdb_trie_update_entry(etdb_trie_t *trie, int64_t *from, uint8_t word, uint8_t s
   }
 }
 
-int
+int64_t
 etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, int64_t value)
 {
   int64_t from = 0;
@@ -493,8 +493,10 @@ etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, int64_t value)
 #else
   const int64_t to = etdb_trie_follow(trie, &from, 0);
 #endif
+  
+  int64_t p_value = trie->node[to].value;
   trie->node[to].value = value;
-  return 0;
+  return p_value;
 }
 
 static int64_t

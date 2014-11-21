@@ -54,7 +54,7 @@ extern void
 etdb_trie_destory(etdb_trie_t *trie);
 
 /*** update trie ****/
-extern int
+extern int64_t
 etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, int64_t value);
 
 /*** search trie ***/

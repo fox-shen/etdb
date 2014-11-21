@@ -18,6 +18,7 @@ etdb_connect_close(etdb_connection_t *conn)
   if(conn->sock >= 0)
     close(conn->sock);
   etdb_destroy_pool(conn->pool); 
+  etdb_destroy_pool(conn->pool_temp);
 }
 
 void 

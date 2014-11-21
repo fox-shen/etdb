@@ -1,5 +1,7 @@
 #!/bin/sh
 
+echo "Init Options"
+
 ETDB_OBJS="objs"
 ETDB_MAKEFILE="Makefile"
 ETDB_OBJS_MAKEFILE="$ETDB_OBJS/Makefile"

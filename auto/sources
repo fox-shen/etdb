@@ -1,11 +1,14 @@
 #!/bin/sh
 
+echo "Prepare Sources"
+
 ETDB_INCS="src \
            src/modules"
 
 ETDB_LIB_SRCS="src/etdb_alloc.c \
                src/etdb_buf.c \
                src/etdb_config.c \
+               src/etdb_file_config.c \
                src/etdb_connection.c \
                src/etdb_event.c \
                src/etdb_queue.c \
@@ -20,8 +23,10 @@ ETDB_LIB_SRCS="src/etdb_alloc.c \
                src/etdb_string.c \
                src/etdb_time.c \
                src/etdb_trie.c \
+               src/etdb_database.c \
                src/linenoise.c \
-               src/modules/etdb_kv.c"
+               src/modules/etdb_kv.c \
+               src/modules/etdb_hash.c "
 
 ETDB_TEST_SRCS="test/etdb_test_alloc.c \
                 test/etdb_test_string.c \
