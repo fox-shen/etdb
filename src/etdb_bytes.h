@@ -17,4 +17,7 @@ typedef struct etdb_bytes_s{
    }                                                                         \
 }
 
+size_t etdb_bytes_total_len(etdb_bytes_t *bytes);
+void   etdb_bytes_total_copy(uint8_t *pos, etdb_bytes_t *bytes);
+
 #endif

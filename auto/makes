@@ -30,7 +30,7 @@ done
 cat << END >> $ETDB_OBJS_MAKEFILE
 TESTS = $TESTS
 
-all : \$(LIBS) \$(EXES) \$(TESTS)
+all : clean \$(LIBS) \$(EXES) \$(TESTS)
 
 clean : 
 	rm -r -f src/*.o src/modules/*.o test/*.o \$(LIBS) \$(EXES)

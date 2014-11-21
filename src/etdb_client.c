@@ -83,7 +83,7 @@ etdb_cli_init(int argc, char **argv)
   etdb_cli_init_conn();
 }
 
-static void
+static int
 etdb_cli_handle_user_cmd(uint8_t *cmd, size_t len)
 {
   etdb_str_t raw_input = { len, cmd};
@@ -91,6 +91,10 @@ etdb_cli_handle_user_cmd(uint8_t *cmd, size_t len)
   size_t splits_num = 256, idx = 0;
 
   etdb_str_split(&raw_input, ' ', splits, &splits_num);
+  if(splits_num == 0){
+     return -1;
+  } 
+
   for(; idx < splits_num; ++idx){
     if(splits[idx].len != 0){
       etdb_buf_append_record(etdb_cli_conn->buf_out, &splits[idx]);
@@ -105,6 +109,7 @@ etdb_cli_handle_user_cmd(uint8_t *cmd, size_t len)
       etdb_event_mgr_set(&etdb_event_mgr, ETDB_CONN_FD(etdb_cli_conn), FDEVENT_OUT, 1, etdb_cli_conn);
     }
   }
+  return 0;
 }
 
 static void
@@ -125,7 +130,7 @@ etdb_cli_cycle()
       buf = linenoise(title);
       if(buf == NULL)   break; 
 
-      etdb_cli_handle_user_cmd(buf, strlen(buf));
+      if( etdb_cli_handle_user_cmd(buf, strlen(buf)) < 0 )  continue;
       responsed = 0;
     }
 

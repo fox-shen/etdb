@@ -8,6 +8,8 @@ ETDB_LIB_SRCS="src/etdb_alloc.c \
                src/etdb_config.c \
                src/etdb_connection.c \
                src/etdb_event.c \
+               src/etdb_queue.c \
+               src/etdb_bytes.c \
                src/etdb_geo_hash.c \
                src/etdb_log.c \
                src/etdb_modules.c \
