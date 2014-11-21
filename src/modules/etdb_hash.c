@@ -42,32 +42,37 @@ etdb_module_t etdb_hash_module={
 static int 
 etdb_hash_set_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
-  etdb_bytes_t *tb_na = (etdb_bytes_t*)(args->queue.next->next);
-  etdb_bytes_t *key   = (etdb_bytes_t*)(tb_na->queue.next);
+  etdb_bytes_t *name  = (etdb_bytes_t*)(args->queue.next->next);
+  etdb_bytes_t *key   = (etdb_bytes_t*)(name->queue.next);
   etdb_bytes_t *value = (etdb_bytes_t*)(key->queue.next);
  
-  uint8_t *pos = tb_na->str.data;
-  *(--pos)     = ETDB_HASH_HEAD_DELIM;
-  while(*pos  != '\n') --pos;
-  *pos         = ETDB_HASH_HEAD;
+  /**** note: name->str.len <= 255 ****/
+  uint8_t *src        = name->str.data + name->str.len -1;
+  uint8_t *dst        = key->str.data  - 1;
+  while(*src != '\n') { *dst-- = *src--; } 
+  *dst--              = (uint8_t)name->str.len;
+  *dst                = ETDB_HASH_HEAD;
 
-  return etdb_database_update(pos, key->str.len + key->str.data - pos + 1, 
+  return etdb_database_update(dst, key->str.len + key->str.data - dst + 1, 
                               value->str.data, value->str.len);
 }
 
 static int 
 etdb_hash_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
-  etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next); 
+  etdb_bytes_t *name   = (etdb_bytes_t*)(args->queue.next->next);
+  etdb_bytes_t *key    = (etdb_bytes_t*)(name->queue.next); 
 
-  uint8_t *pos = key->str.data;
-  *(--pos)     = ETDB_HASH_HEAD_DELIM;
-  while(*pos  != '\n') --pos;
-  *pos         = ETDB_HASH_HEAD;
+  /**** note: name->str.len <= 255 ****/
+  uint8_t *src        = name->str.data + name->str.len -1;
+  uint8_t *dst        = key->str.data  - 1;
+  while(*src != '\n') { *dst-- = *src--; }
+  *dst--              = (uint8_t)name->str.len;
+  *dst                = ETDB_HASH_HEAD;
 
   uint8_t *value = NULL;
   size_t value_len = 0;
-  int ret = etdb_database_exact_match(pos, key->str.len + key->str.data - pos + 1, 
+  int ret = etdb_database_exact_match(dst, key->str.len + key->str.data - dst + 1, 
                                       &value, &value_len); 
 
   if(ret < 0){
@@ -83,12 +88,15 @@ etdb_hash_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
 static int 
 etdb_hash_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
-  etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next);
+  etdb_bytes_t *name   = (etdb_bytes_t*)(args->queue.next->next);
+  etdb_bytes_t *key    = (etdb_bytes_t*)(name->queue.next);
 
-  uint8_t *pos = key->str.data;
-  *(--pos)     = ETDB_HASH_HEAD_DELIM;
-  while(*pos  != '\n') --pos;
-  *pos         = ETDB_HASH_HEAD;
+  /**** note: name->str.len <= 255 ****/
+  uint8_t *src        = name->str.data + name->str.len -1;
+  uint8_t *dst        = key->str.data  - 1;
+  while(*src != '\n') { *dst-- = *src--; }
+  *dst--              = (uint8_t)name->str.len;
+  *dst                = ETDB_HASH_HEAD;
 
-  return etdb_database_erase(pos, key->str.len + key->str.data - pos + 1); 
+  return etdb_database_erase(dst, key->str.len + key->str.data - dst + 1); 
 }

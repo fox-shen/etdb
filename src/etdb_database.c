@@ -50,7 +50,11 @@ int
 etdb_database_erase(const uint8_t *key, size_t key_len)
 {
 #ifndef DISK_VERSION
-  return etdb_trie_erase(&(etdb_database->trie), key, key_len); 
+  int64_t p_value  = etdb_trie_erase(&(etdb_database->trie), key, key_len); 
+  if(p_value < 0)  return -1;
+  
+  etdb_free((uint32_t*)p_value);
+  return 0;
 #else
   return 0;
 #endif

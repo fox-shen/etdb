@@ -65,7 +65,7 @@ extern void
 etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, int64_t *array, size_t *size, etdb_pool_t *pool);
 
 /*** delete trie ***/
-extern int
+extern int64_t
 etdb_trie_erase(etdb_trie_t *trie, const char *key, size_t len);
 
 /*** get total size ***/

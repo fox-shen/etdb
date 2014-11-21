@@ -596,16 +596,18 @@ etdb_trie_erase_impl(etdb_trie_t *trie, int64_t from)
   }while(!flag);
 }
 
-int
+int64_t
 etdb_trie_erase(etdb_trie_t *trie, const char *key, size_t len)
 {
   int64_t from = 0, pos = 0;
-  int64_t i = etdb_trie_find(trie, key, &from, pos, len);
-  if(i == ETDB_TRIE_NO_PATH || i == ETDB_TRIE_NO_VALUE){
+  union{ int64_t i; int64_t value;} b;
+
+  b.i = etdb_trie_find(trie, key, &from, pos, len);
+  if(b.i == ETDB_TRIE_NO_PATH || b.i == ETDB_TRIE_NO_VALUE){
     return -1;
   }
   etdb_trie_erase_impl(trie, from);
-  return 0;
+  return b.i;
 }
 
 int64_t
