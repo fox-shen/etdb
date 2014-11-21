@@ -262,4 +262,23 @@ etdb_connect_write(etdb_connection_t *conn)
   return ret;
 }
 
+int 
+etdb_connect_send_cmd(etdb_connection_t *conn, uint8_t *cmd, size_t len)
+{
+  etdb_str_t raw_input = { len, cmd};
+  etdb_str_t splits[256];
+  size_t splits_num = 256, idx = 0, cmd_num = 0;
 
+  etdb_str_split(&raw_input, ' ', splits, &splits_num);
+
+  for(; idx < splits_num; ++idx){
+    if(splits[idx].len != 0){
+      etdb_buf_append_record(conn->buf_out, &splits[idx]);
+      ++cmd_num;
+    }
+  }
+  if(cmd_num == 0)  return -1;
+  etdb_str_t fin_str = etdb_string("\n");
+  etdb_buf_append_record(conn->buf_out, &fin_str);
+  return 0;
+}

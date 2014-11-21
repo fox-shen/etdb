@@ -126,7 +126,7 @@ etdb_resp_parse_req(etdb_connection_t *conn)
   return 1;
 }
 
-static void
+void
 etdb_resp_tolower(etdb_bytes_t* recv_cmd)
 {
   recv_cmd = (etdb_bytes_t*)recv_cmd->queue.next;
@@ -150,9 +150,7 @@ etdb_resp_recv_redis_req(etdb_connection_t *conn)
       }
     }
     return 1;
-  }
- 
-  etdb_resp_tolower(&(conn->recv_cmd)); 
+  } 
 }
 
 int 
@@ -172,8 +170,6 @@ etdb_resp_recv_req(etdb_connection_t *conn)
       }
     }
     return 1;
-  }
- 
-  etdb_resp_tolower(&(conn->recv_cmd)); 
+  } 
 }
 

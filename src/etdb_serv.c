@@ -31,15 +31,16 @@ etdb_serv_parse_args(etdb_bytes_t *req, etdb_command_t *cmd)
 void 
 etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
 {
+  etdb_resp_tolower(req); 
   etdb_command_t* cmd = etdb_module_find_command(&(((etdb_bytes_t*)(req->queue.next))->str)); 
   etdb_bytes_t resp;
   etdb_queue_init(&(resp.queue));
 
   if(cmd == NULL || etdb_serv_parse_args(req, cmd) < 0){
     etdb_bytes_t n;
-    size_t len = sizeof("Unkown Command:") - 1 + (((etdb_bytes_t*)(req->queue.next))->str).len + etdb_bytes_total_len(req);
+    size_t len = sizeof("Unkown Command: ") - 1 + (((etdb_bytes_t*)(req->queue.next))->str).len + etdb_bytes_total_len(req);
     char *head = etdb_palloc_temp(conn->pool_temp, len);
-    char *pos  = memcpy(head, "Unkown Command:", sizeof("Unkown Command:") - 1) + sizeof("Unkown Command:") - 1;
+    char *pos  = memcpy(head, "Unkown Command: ", sizeof("Unkown Command: ") - 1) + sizeof("Unkown Command: ") - 1;
     etdb_bytes_total_copy(pos, req);
     
     etdb_bytes_set(&n, head, len);
