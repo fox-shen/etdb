@@ -7,8 +7,16 @@ struct etdb_database_s{
 };
 
 int etdb_database_init();
+
+/*** kv opertation ***/
 int etdb_database_update(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len);
 int etdb_database_exact_match(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len);
 int etdb_database_erase(const uint8_t *key, size_t key_len);
+
+/*** list operation ***/
+int etdb_database_lpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len);
+int etdb_database_rpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len);
+int etdb_database_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len);
+int etdb_database_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len);
 
 #endif

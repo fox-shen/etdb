@@ -6,7 +6,6 @@ static int etdb_hash_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, et
 static int etdb_hash_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 
 #define ETDB_HASH_HEAD '1'
-#define ETDB_HASH_HEAD_DELIM '_'
 
 static etdb_command_t etdb_hash_commands[] = {
   {

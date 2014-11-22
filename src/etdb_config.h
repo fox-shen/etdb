@@ -15,6 +15,12 @@ typedef int (*etdb_init_handler)(void *args);
 #define ETDB_CMD_FLAG_ARG3      (1<<7)
 #define ETDB_CMD_FLAG_ARG4      (1<<8)
 
+#define ETDB_CMD_FLAG_ARG1MORE  (1<<9)
+#define ETDB_CMD_FLAG_ARG2MORE  (1<<10)
+#define ETDB_CMD_FLAG_ARG3MORE  (1<<11)
+#define ETDB_CMD_FLAG_ARG4MORE  (1<<12)
+#define ETDB_CMD_FLAG_ARG5MORE  (1<<13)
+
 typedef struct etdb_command_s etdb_command_t;
 struct etdb_command_s{
   etdb_str_t               name;

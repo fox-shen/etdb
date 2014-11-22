@@ -8,22 +8,27 @@ etdb_serv_parse_args(etdb_bytes_t *req, etdb_command_t *cmd)
   int cmd_cnt = etdb_queue_count(&(req->queue)) - 1;
   switch(cmd_cnt){
     case 0:
-      if((cmd->flags & ETDB_CMD_FLAG_NOARG) == 0) return -1;
+      if((cmd->flags & ETDB_CMD_FLAG_NOARG) == 0)       return -1;
       break;
     case 1:
-      if((cmd->flags & ETDB_CMD_FLAG_ARG1) == 0)  return -1;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG1MORE) != 0)    break;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG1) == 0)        return -1;
       break;
     case 2:
-      if((cmd->flags & ETDB_CMD_FLAG_ARG2) == 0)  return -1;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG2MORE) != 0)    break;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG2) == 0)        return -1;
       break;
     case 3:
-      if((cmd->flags & ETDB_CMD_FLAG_ARG3) == 0)  return -1;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG3MORE) != 0)    break;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG3) == 0)        return -1;
       break;
     case 4:
-      if((cmd->flags & ETDB_CMD_FLAG_ARG4) == 0)  return -1;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG4MORE) != 0)    break;
+      if((cmd->flags & ETDB_CMD_FLAG_ARG4) == 0)        return -1;
       break;
-    default:
-      break;
+    default: /*** ARG >= 5 MUST USE "ETDB_CMD_FLAG_ARG5MORE" **/
+      if((cmd->flags & ETDB_CMD_FLAG_ARG5MORE) != 0)    break;
+      return -1;
   }
   return 0;
 }

@@ -1,4 +1,5 @@
 #include <etdb.h>
+#include <etdb_list.h>
 
 etdb_database_t *etdb_database = NULL;
 
@@ -20,9 +21,9 @@ etdb_database_update(const uint8_t *key, size_t key_len, const uint8_t *value, s
   uint32_t *nvalue = etdb_alloc(sizeof(uint32_t) + value_len);
   *nvalue          = value_len;
   memcpy(nvalue + 1, value, value_len);
-  int64_t p_value  = etdb_trie_update(&(etdb_database->trie), key, key_len, (intptr_t)(nvalue)); 
-  if(p_value != 0){
-    etdb_free((void*)p_value);
+  if( etdb_trie_update(&(etdb_database->trie), key, key_len, (intptr_t)(nvalue)) < 0){ 
+    etdb_free((void*)nvalue);
+    return -1;
   }
 #else
   
@@ -56,6 +57,91 @@ etdb_database_erase(const uint8_t *key, size_t key_len)
   etdb_free((uint32_t*)p_value);
   return 0;
 #else
-  return 0;
+  
 #endif
+  return 0;
+}
+
+int 
+etdb_database_lpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
+{
+#ifndef DISK_VERSION
+  int64_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  if(p_value < 0){ /**** alloc new list head ****/
+     etdb_list_t *head     = etdb_list_new();
+     etdb_list_lpush(head, value, value_len);
+     if( etdb_trie_update(&(etdb_database->trie), key, key_len, (intptr_t)(head)) < 0){
+       etdb_queue_free(&(head->queue));
+       return -1;
+     }
+  }else{ /*** only lpush ****/
+     etdb_list_t *head      = (etdb_list_t*)p_value;
+     etdb_list_lpush(head, value, value_len);
+  }
+#else
+
+#endif
+  return 0;
+}
+
+int 
+etdb_database_rpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
+{
+#ifndef DISK_VERSION
+  int64_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  if(p_value < 0){ /**** alloc new list head ****/
+     etdb_list_t *head     = etdb_list_new();
+     etdb_list_rpush(head, value, value_len);
+     if( etdb_trie_update(&(etdb_database->trie), key, key_len, (intptr_t)(head)) < 0){
+       etdb_queue_free(&(head->queue));
+       return -1;
+     }
+  }else{ /*** only lpush ****/
+     etdb_list_t *head      = (etdb_list_t*)p_value;
+     etdb_list_rpush(head, value, value_len);
+  }  
+#else
+
+#endif
+  return 0;
+}
+
+int 
+etdb_database_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
+{
+#ifndef DISK_VERSION
+  int64_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  if(p_value < 0)   return -1;
+
+  etdb_list_t *head = (etdb_list_t*)p_value;
+  if(etdb_list_empty(head))  return -1;
+
+  etdb_list_t *l    = (etdb_list_t*)(head->queue.next);
+  etdb_queue_remove(&(l->queue));
+  *value            = l->data;
+  *value_len        = l->size;
+#else
+
+#endif
+  return 0;
+}
+
+int 
+etdb_database_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
+{
+#ifndef DISK_VERSION
+  int64_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  if(p_value < 0)   return -1;
+
+  etdb_list_t *head = (etdb_list_t*)p_value;
+  if(etdb_list_empty(head))  return -1;
+  
+  etdb_list_t *l    = (etdb_list_t*)(head->queue.prev);
+  etdb_queue_remove(&(l->queue));
+  *value            = l->data;
+  *value_len        = l->size;
+#else
+
+#endif
+  return 0;
 }
