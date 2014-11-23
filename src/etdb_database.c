@@ -145,3 +145,21 @@ etdb_database_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *
 #endif
   return 0;
 }
+
+const uint8_t* 
+etdb_database_info_version()
+{
+  return ETDB_VERSION;
+}
+
+size_t 
+etdb_database_info_mem()
+{
+  return etdb_trie_total_size(&(etdb_database->trie))*sizeof(etdb_trie_node_t); 
+}
+
+size_t 
+etdb_database_info_keys()
+{
+  return etdb_trie_num_keys(&(etdb_database->trie)); 
+}
