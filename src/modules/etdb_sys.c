@@ -1,13 +1,26 @@
 #include <etdb.h>
 
 static int etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
-#define ETDB_SYS_HEAD '9'
+static int etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
+static int etdb_sys_sync_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 
 static etdb_command_t etdb_sys_commands[] = {
   {
     etdb_string("info"),
     ETDB_CMD_FLAG_NOARG,
     etdb_sys_info_handler,
+    etdb_command_padding
+  },
+  {
+    etdb_string("bgsave"),
+    ETDB_CMD_FLAG_NOARG,
+    etdb_sys_bgsave_handler,
+    etdb_command_padding
+  },
+  {
+    etdb_string("sync"),
+    ETDB_CMD_FLAG_NOARG,
+    etdb_sys_sync_handler,
     etdb_command_padding
   },
   {
@@ -52,3 +65,14 @@ etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
   return 0;
 }
 
+static int 
+etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
+{
+  return -1;
+}
+
+static int 
+etdb_sys_sync_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
+{
+  return -1;
+}

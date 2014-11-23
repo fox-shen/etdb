@@ -30,7 +30,7 @@ static etdb_command_t etdb_sidx_commands[] = {
   },
   {
     etdb_string("sknn"),
-    ETDB_CMD_FLAG_ARG2,
+    ETDB_CMD_FLAG_ARG2|ETDB_CMD_FLAG_ARG3,
     etdb_sidx_sknn_handler,
     etdb_command_padding 
   },
@@ -132,5 +132,9 @@ etdb_sidx_srect_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
 static int 
 etdb_sidx_sknn_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool_temp, sizeof(etdb_bytes_t));
+  new_bytes->str.len    =  strlen("knn");
+  new_bytes->str.data   =  "knn";
+  etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
   return 0;
 }
