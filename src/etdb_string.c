@@ -70,3 +70,56 @@ etdb_fprintf(FILE *stream, const char *format, ...)
   etdb_vslprintf(stream, format, args);
   va_end(args);
 }
+
+int 
+etdb_atof(const uint8_t *data, size_t len, double *ret)
+{
+  *ret       = 0;
+  size_t i   = 0;
+  int   flag = 1;
+  float step = 1.0;
+
+  while(i < len){
+    if(i == 0){
+      if(data[i] == '-')       flag = -1;
+      else if(data[i] == '+')  flag = 1;
+    }
+    if(data[i] == '.')  step = 0.1;
+    else if(data[i] >= '0' && data[i] <= '9'){
+      if(step < 1){
+        *ret += (data[i] - '0')*step;
+        step = step * 0.1;
+      }else{
+        *ret = *ret*10 + (data[i] - '0');
+      }
+    }else{
+      return -1;  
+    } 
+    ++i;
+  }
+  *ret = *ret * flag;
+  return 0; 
+}
+
+int 
+etdb_atoi(const uint8_t *data, size_t len, int *ret)
+{
+  *ret     = 0;
+  int i    = 0;
+  int flag = 1;
+ 
+  while(i < len){
+    if(i == 0){
+      if(data[i] == '+')      flag = 1;
+      else if(data[i] == '-') flag = -1;
+    }
+    if(data[i] >= '0' && data[i] <= '9'){
+      *ret = *ret * 10 + (data[i] - '0');
+    }else{
+      return -1;
+    }
+    ++i;
+  }
+  *ret = *ret * flag;
+  return 0;
+}

@@ -61,7 +61,7 @@ etdb_kv_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
   if(ret < 0){
      return -1; 
   }
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool, sizeof(etdb_bytes_t));
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool_temp, sizeof(etdb_bytes_t));
   new_bytes->str.len    =  value_len;
   new_bytes->str.data   =  value;
   etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));

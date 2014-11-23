@@ -63,7 +63,7 @@ etdb_database_erase(const uint8_t *key, size_t key_len)
 }
 
 int 
-etdb_database_lpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
+etdb_database_list_lpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
 {
 #ifndef DISK_VERSION
   int64_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
@@ -85,7 +85,7 @@ etdb_database_lpush(const uint8_t *key, size_t key_len, const uint8_t *value, si
 }
 
 int 
-etdb_database_rpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
+etdb_database_list_rpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
 {
 #ifndef DISK_VERSION
   int64_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
@@ -107,7 +107,7 @@ etdb_database_rpush(const uint8_t *key, size_t key_len, const uint8_t *value, si
 }
 
 int 
-etdb_database_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
+etdb_database_list_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
 {
 #ifndef DISK_VERSION
   int64_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
@@ -120,6 +120,10 @@ etdb_database_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *
   etdb_queue_remove(&(l->queue));
   *value            = l->data;
   *value_len        = l->size;
+
+  if(etdb_queue_empty(&(head->queue))){
+    etdb_database_erase(key, key_len);
+  }
 #else
 
 #endif
@@ -127,7 +131,7 @@ etdb_database_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *
 }
 
 int 
-etdb_database_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
+etdb_database_list_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
 {
 #ifndef DISK_VERSION
   int64_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
@@ -140,6 +144,36 @@ etdb_database_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *
   etdb_queue_remove(&(l->queue));
   *value            = l->data;
   *value_len        = l->size;
+
+  if(etdb_queue_empty(&(head->queue))){
+    etdb_database_erase(key, key_len);
+  }
+#else
+
+#endif
+  return 0;
+}
+
+int
+etdb_database_list_remove(const uint8_t *key, size_t key_len, uint8_t *value, size_t value_len)
+{
+#ifndef DISK_VERSION
+  int64_t p_value    = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  if(p_value < 0)   return -1;
+
+  etdb_list_t *head  = (etdb_list_t*)p_value;
+  etdb_list_t *l     = (etdb_list_t*)(head->queue.next);
+  for(; l != head; l = (etdb_list_t*)(l->queue.next)) {
+    if(l->size != value_len )  continue;
+    if(memcmp(l->data, value, l->size) == 0){
+      etdb_queue_remove(&(l->queue));
+      if(etdb_queue_empty(&(head->queue))){
+        etdb_database_erase(key, key_len);
+      }
+      return 0;
+    }
+  }
+  return -1;
 #else
 
 #endif

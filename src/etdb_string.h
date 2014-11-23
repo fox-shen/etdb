@@ -14,4 +14,7 @@ size_t etdb_str_split(etdb_str_t *s, uint8_t split, etdb_str_t *splits, size_t *
 void   etdb_str_tolower(uint8_t* data, size_t len);
 void etdb_fprintf(FILE *stream, const char *format, ...);
 
+int etdb_atof(const uint8_t *data, size_t len, double *ret);
+int etdb_atoi(const uint8_t *data, size_t len, int    *ret);
+
 #endif

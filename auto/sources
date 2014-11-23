@@ -28,6 +28,7 @@ ETDB_LIB_SRCS="src/etdb_alloc.c \
                src/modules/etdb_kv.c \
                src/modules/etdb_hash.c \
                src/modules/etdb_list.c \
+               src/modules/etdb_sidx.c \
                src/modules/etdb_sys.c"
 
 ETDB_TEST_SRCS="test/etdb_test_alloc.c \
@@ -46,12 +47,14 @@ cat << END > src/etdb_modules.c
 extern etdb_module_t etdb_kv_module;
 extern etdb_module_t etdb_hash_module;
 extern etdb_module_t etdb_list_module;
+extern etdb_module_t etdb_sidx_module;
 extern etdb_module_t etdb_sys_module;
 
 etdb_module_t* etdb_modules[]={
   &etdb_kv_module,
   &etdb_hash_module,
   &etdb_list_module,
+  &etdb_sidx_module,
   &etdb_sys_module,
   NULL
 };

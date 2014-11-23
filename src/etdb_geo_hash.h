@@ -42,14 +42,14 @@ struct etdb_geo_hash_corrd_s{
  * or less than it defaults to 12.
  */
 extern char* 
-etdb_geo_hash_encode(double lat, double lng, int precision);
+etdb_geo_hash_encode(double lat, double lng, char *hash, int precision);
 
 /* 
  * Returns the latitude and longitude used to create the hash along with
  * the bounding box for the encoded coordinate.
  */
 extern etdb_geo_hash_corrd_t 
-etdb_geo_hash_decode(char* hash);
+etdb_geo_hash_decode(char* hash, int char_amount);
 
 /* 
  * Return an array of geohashes that represent the neighbors of the passed

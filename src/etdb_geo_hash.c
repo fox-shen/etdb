@@ -75,14 +75,12 @@ etdb_geo_hash_get_neighbor(char *hash, int direction)
 }
 
 char* 
-etdb_geo_hash_encode(double lat, double lng, int precision) {    
+etdb_geo_hash_encode(double lat, double lng, char *hash, int precision){    
   if(precision < 1 || precision > 12)
     precision = 6;
-    
-  char* hash = NULL;
+
   if(lat <= 90.0 && lat >= -90.0 && lng <= 180.0 && lng >= -180.0) {
-    hash = (char*)malloc(sizeof(char) * (precision + 1));
-    hash[precision] = '\0';
+    //hash[precision] = '\0';
     precision *= 5.0;
         
     etdb_geo_hash_interval_t lat_interval = {MAX_LAT, MIN_LAT};
@@ -124,11 +122,10 @@ etdb_geo_hash_encode(double lat, double lng, int precision) {
 }
 
 etdb_geo_hash_corrd_t
-etdb_geo_hash_decode(char *hash) 
+etdb_geo_hash_decode(char *hash, int char_amount) 
 { 
   etdb_geo_hash_corrd_t coordinate = {0.0, 0.0, 0.0, 0.0, 0.0, 0.0, {0.0, 0.0}};
   if(hash) {    
-    int char_amount = strlen(hash);
     if(char_amount) {
        unsigned int char_mapIndex;
        etdb_geo_hash_interval_t lat_interval = {MAX_LAT, MIN_LAT};
