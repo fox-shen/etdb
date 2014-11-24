@@ -30,7 +30,7 @@ etdb_database_update(const uint8_t *key, size_t key_len, const uint8_t *value, s
 int 
 etdb_database_exact_match(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
 {
-  int64_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
   if(p_value < 0)   return -1;
   
   uint32_t *nvalue = (uint32_t*)p_value;
@@ -42,7 +42,7 @@ etdb_database_exact_match(const uint8_t *key, size_t key_len, uint8_t **value, s
 int 
 etdb_database_erase(const uint8_t *key, size_t key_len)
 {
-  int64_t p_value  = etdb_trie_erase(&(etdb_database->trie), key, key_len); 
+  etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), key, key_len); 
   if(p_value < 0)  return -1;
   
   etdb_free((uint32_t*)p_value);
@@ -52,7 +52,7 @@ etdb_database_erase(const uint8_t *key, size_t key_len)
 int 
 etdb_database_list_lpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
 {
-  int64_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
   if(p_value < 0){ /**** alloc new list head ****/
      etdb_list_t *head     = etdb_list_new();
      etdb_list_lpush(head, value, value_len);
@@ -70,7 +70,7 @@ etdb_database_list_lpush(const uint8_t *key, size_t key_len, const uint8_t *valu
 int 
 etdb_database_list_rpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
 {
-  int64_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
   if(p_value < 0){ /**** alloc new list head ****/
      etdb_list_t *head     = etdb_list_new();
      etdb_list_rpush(head, value, value_len);
@@ -88,7 +88,7 @@ etdb_database_list_rpush(const uint8_t *key, size_t key_len, const uint8_t *valu
 int 
 etdb_database_list_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
 {
-  int64_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
   if(p_value < 0)   return -1;
 
   etdb_list_t *head = (etdb_list_t*)p_value;
@@ -108,7 +108,7 @@ etdb_database_list_lpop(const uint8_t *key, size_t key_len, uint8_t **value, siz
 int 
 etdb_database_list_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
 {
-  int64_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
   if(p_value < 0)   return -1;
 
   etdb_list_t *head = (etdb_list_t*)p_value;
@@ -128,7 +128,7 @@ etdb_database_list_rpop(const uint8_t *key, size_t key_len, uint8_t **value, siz
 int
 etdb_database_list_remove(const uint8_t *key, size_t key_len, uint8_t *value, size_t value_len)
 {
-  int64_t p_value    = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
+  etdb_id_t p_value    = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
   if(p_value < 0)   return -1;
 
   etdb_list_t *head  = (etdb_list_t*)p_value;

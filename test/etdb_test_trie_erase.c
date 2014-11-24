@@ -9,7 +9,7 @@ TestErase()
 #define N 1000000
 #define L 32
    unsigned char** buf_array = (unsigned char**)malloc(sizeof(char*)*N);
-   int64_t* value   = (int64_t*)malloc(sizeof(int64_t)*N);
+   etdb_id_t* value   = (etdb_id_t*)malloc(sizeof(etdb_id_t)*N);
    int i;
    for(i = 0; i < N; ++i){
      buf_array[i] = (char*)malloc(sizeof(char)*L);
@@ -25,7 +25,7 @@ TestErase()
    long int time_stamp_1 = etdb_utls_get_timestamp();
    for(i = 0; i < N; ++i){
      // printf("erase: %d -> %d\n", i, N);
-     int64_t v = etdb_trie_erase(&trie, buf_array[i], strlen(buf_array[i]));
+     etdb_id_t v = etdb_trie_erase(&trie, buf_array[i], strlen(buf_array[i]));
      ///assert(v == 0);
    }
    printf("Erase Success, Time: %d(ms)/%d queries\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, N);

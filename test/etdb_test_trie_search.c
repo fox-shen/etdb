@@ -6,7 +6,7 @@ TestSearch()
    etdb_trie_t trie;
    etdb_trie_init(&trie);
    unsigned char buf[1024];
-   int64_t value = 1;
+   etdb_id_t value = 1;
    sprintf(buf, "1234#1234");
    buf[4] = '\0';
    etdb_trie_update(&trie, buf, 8, value);
@@ -29,7 +29,7 @@ TestSearchHuge()
 #define N 1000000
 #define L 20
    unsigned char** buf_array = (unsigned char**)malloc(sizeof(char*)*N); 
-   int64_t* value   = (int64_t*)malloc(sizeof(int64_t)*N);
+   etdb_id_t* value   = (etdb_id_t*)malloc(sizeof(etdb_id_t)*N);
    int i;
    for(i = 0; i < N; ++i){
      buf_array[i] = (char*)malloc(sizeof(char)*L);
@@ -57,7 +57,7 @@ TestSearchHuge()
    printf("after huge search key=%d\n", etdb_trie_num_keys(&trie));
    long int time_stamp_1 = etdb_utls_get_timestamp();
    for(i = 0; i < N; ++i){
-     int64_t v = etdb_trie_exact_match_search(&trie, buf_array[i], L);
+     etdb_id_t v = etdb_trie_exact_match_search(&trie, buf_array[i], L);
      assert(v == value[i]);
    }
    printf("Huge Search Success, Time: %d(ms)/%d queries\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, N);

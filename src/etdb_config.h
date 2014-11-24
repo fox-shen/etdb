@@ -26,7 +26,7 @@ struct etdb_command_s{
   etdb_str_t               name;
   uint32_t                 flags;
   etdb_command_handler     handler;
-  uint64_t                 calls;
+  long int                 calls;
   long int                 time_wait;
   long int                 time_proc;
 };

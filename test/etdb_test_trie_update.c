@@ -13,7 +13,7 @@ TestUpdate(const char* text_file)
    etdb_trie_init(&trie);
    unsigned char buf[1024];
 
-   int64_t value = 0;
+   etdb_id_t value = 0;
    while(fgets(buf, 1024, fp)){
      etdb_trie_update(&trie, buf, strlen(buf) - 1, value++);
    }

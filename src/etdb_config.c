@@ -18,14 +18,14 @@ etdb_module_init()
 
     if(etdb_modules[pos]->commands == NULL)  continue;
 
-    int64_t value = 0;
+    etdb_id_t value = 0;
     etdb_modules[pos]->module_id = pos;
     value         = pos;
-    value         = value << 32;
+    value         = value << 16;
 
     idx           = 0;
     while(etdb_modules[pos]->commands[idx].name.data != NULL){
-       int64_t value_insert = value | idx;
+       etdb_id_t value_insert = value | idx;
        if( etdb_trie_update(&etdb_command_trie, 
                             etdb_modules[pos]->commands[idx].name.data,
                             etdb_modules[pos]->commands[idx].name.len,
@@ -40,12 +40,12 @@ etdb_module_init()
 etdb_command_t* 
 etdb_module_find_command(etdb_str_t *str)
 {
-  int64_t value_insert = etdb_trie_exact_match_search(&etdb_command_trie, str->data, str->len);
+  etdb_id_t value_insert = etdb_trie_exact_match_search(&etdb_command_trie, str->data, str->len);
   if(value_insert == ETDB_TRIE_NO_VALUE){
     return NULL;
   }
-  int64_t pos = value_insert >> 32;
-  int64_t idx = value_insert & 0xffffffff;
+  etdb_id_t pos = value_insert >> 16;
+  etdb_id_t idx = value_insert & 0xffff;
   return &(etdb_modules[pos]->commands[idx]);
 }
 

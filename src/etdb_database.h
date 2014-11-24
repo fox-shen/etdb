@@ -1,6 +1,12 @@
 #ifndef H_ETDB_DATABASE_H
 #define H_ETDB_DATABASE_H
 
+typedef struct etdb_value_head_s etdb_value_head_t;
+struct etdb_value_head_s{
+  uint16_t  size;
+  uint8_t   type;
+};
+
 typedef struct etdb_database_s etdb_database_t;
 struct etdb_database_s{
   etdb_trie_t  trie;  
