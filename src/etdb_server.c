@@ -7,6 +7,7 @@ etdb_event_mgr_t  etdb_event_mgr;
 etdb_connection_t *etdb_server_conn;
 uint8_t           etdb_quit = 0;
 uint32_t          etdb_conn_cnt = 0;
+etdb_log_t        etdb_log;
 
 static void
 etdb_print_welcome()
@@ -50,7 +51,7 @@ etdb_init_server_conn()
 {
   etdb_server_conn = etdb_connect_listen("0.0.0.0", 19000);
   if(etdb_server_conn == NULL){
-    exit(1);
+    etdb_log_print(&etdb_log, ETDB_LOG_ERR, "listen 127.0.0.1:19000 failed");
   }
   etdb_event_mgr_init(&etdb_event_mgr);
   etdb_event_mgr_set(&etdb_event_mgr, ETDB_CONN_FD(etdb_server_conn), FDEVENT_IN, 0, etdb_server_conn);
@@ -64,11 +65,12 @@ etdb_init(int argc, char **argv)
     exit(1);
   }
   etdb_init_file_config(argv[1]);
+  etdb_log_init(&etdb_log, "log.txt", ETDB_LOG_INFO);
   etdb_init_server_conn();
   etdb_init_signal();
   etdb_database_init();
   if(etdb_module_init() < 0){
-    exit(0);
+    etdb_log_print(&etdb_log, ETDB_LOG_ERR, "etdb_module_init failed");
   }
 }
 

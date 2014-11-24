@@ -32,6 +32,7 @@
 #include <etdb_version.h>
 #include <etdb_bytes.h>
 #include <etdb_buf.h>
+#include <etdb_log.h>
 
 #include <etdb_connection.h>
 #include <etdb_event.h>
@@ -43,6 +44,8 @@
 
 #include <etdb_database.h>
 #include <etdb_config.h>
+
+extern etdb_log_t etdb_log;
 
 #endif
 

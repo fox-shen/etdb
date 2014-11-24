@@ -12,6 +12,12 @@ static etdb_command_t etdb_sys_commands[] = {
     etdb_command_padding
   },
   {
+    etdb_string("help"),
+    ETDB_CMD_FLAG_NOARG|ETDB_CMD_FLAG_ARG1,
+    etdb_sys_info_handler,
+    etdb_command_padding
+  },
+  {
     etdb_string("bgsave"),
     ETDB_CMD_FLAG_NOARG,
     etdb_sys_bgsave_handler,
