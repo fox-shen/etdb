@@ -529,7 +529,7 @@ AGAIN:
 #endif
     to         = to ^ word;
     if(trie->node[to].check != *from)
-      return ETDB_TRIE_NO_VALUE;
+      return ETDB_TRIE_NO_PATH;
     *from       = to;
     if(again_word != ' '){
       word = again_word;
@@ -545,15 +545,15 @@ AGAIN:
 #else 
   etdb_trie_node_t *n = trie->node + (trie->node[*from].base ^ 0);
 #endif
-  if(n->check != *from)
+  if(n->check != *from){
     return ETDB_TRIE_NO_VALUE;
+  }
   return n->base;
 }
 
 etdb_id_t
 etdb_trie_exact_match_search(etdb_trie_t *trie, const char *key, size_t len)
 {
-  etdb_id_t ret  = -1;
   size_t  pos  = 0;
   etdb_id_t from = 0;
   union{ etdb_id_t i; etdb_id_t value;} b;
@@ -563,10 +563,93 @@ etdb_trie_exact_match_search(etdb_trie_t *trie, const char *key, size_t len)
   return b.value;
 }
 
-void
-etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, etdb_id_t *array, size_t *size, etdb_pool_t *pool)
+static void
+etdb_trie_common_prefix_search_dfs(etdb_trie_t *trie, etdb_id_t from, etdb_stack_t *stack_out)
 {
-  
+  union{ etdb_id_t i; etdb_id_t value;}b;
+  uint8_t child = 1;
+ 
+  do{
+    etdb_id_t l_from = from;
+    b.i = etdb_trie_find(trie, (const char*)&child, &l_from, 0, 1);
+    if(b.i != ETDB_TRIE_NO_PATH)
+    {
+      if(b.value != ETDB_TRIE_NO_VALUE){
+        etdb_id_t *p = (etdb_id_t*)etdb_stack_push(stack_out);
+        *p           = b.value;
+      }
+      etdb_trie_common_prefix_search_dfs(trie, l_from, stack_out);
+    }
+  }while(child++ != 255);
+}
+
+void
+etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, etdb_stack_t *stack_result)
+{
+  size_t pos = 0;
+  etdb_id_t from = 0;
+  union{ etdb_id_t i; etdb_id_t value;} b;
+  b.i = etdb_trie_find(trie, key, &from, pos, len);
+
+  if(b.i == ETDB_TRIE_NO_PATH){
+    return;
+  }else{
+    if(b.i != ETDB_TRIE_NO_VALUE){
+      etdb_id_t *p = (etdb_id_t*)etdb_stack_push(stack_result);
+      *p           = b.value;
+    }
+    etdb_trie_common_prefix_search_dfs(trie, from, stack_result); 
+  }   
+}
+
+static void
+etdb_trie_common_prefix_path_search_dfs(etdb_trie_t *trie, etdb_id_t from,  
+                                        etdb_stack_t *stack_in, etdb_bytes_t *result, etdb_pool_t *pool)
+{
+  union{ etdb_id_t i; etdb_id_t value;}b;
+  uint8_t child = 1;
+
+  do{
+    etdb_id_t l_from = from;
+    b.i = etdb_trie_find(trie, (const char*)&child, &l_from, 0, 1);
+    if(b.i != ETDB_TRIE_NO_PATH)
+    {
+      uint8_t *c     = (uint8_t*)etdb_stack_push(stack_in);
+      *c             = child;
+
+      if(b.value != ETDB_TRIE_NO_VALUE){
+        etdb_bytes_t *new_bytes = etdb_palloc(pool, sizeof(etdb_bytes_t) + etdb_stack_size(stack_in));
+        memcpy(new_bytes + 1, stack_in->elts, stack_in->nelts*stack_in->size);
+        new_bytes->str.data     = (uint8_t*)(new_bytes + 1);
+        new_bytes->str.len      = stack_in->nelts * stack_in->size;
+        etdb_queue_insert_tail(&(result->queue), &(new_bytes->queue)); 
+      }
+
+      etdb_trie_common_prefix_path_search_dfs(trie, l_from, stack_in, result, pool);
+      etdb_stack_pop(stack_in);
+    }
+  }while(child++ != 255);
+}
+
+int
+etdb_trie_common_prefix_path_search(etdb_trie_t *trie, const char *key, size_t len, 
+                                    etdb_stack_t *stack_in, etdb_bytes_t *result, etdb_pool_t *pool)
+{
+  int    ret     = 0;
+  size_t pos     = 0;
+  etdb_id_t from = 0;
+  union{ etdb_id_t i; etdb_id_t value;} b;
+  b.i  = etdb_trie_find(trie, key, &from, pos, len);
+
+  if(b.i == ETDB_TRIE_NO_PATH){
+    return;
+  }else{
+    if(b.i != ETDB_TRIE_NO_VALUE){
+      ret            = 1;
+    }
+    etdb_trie_common_prefix_path_search_dfs(trie, from, stack_in, result, pool);
+  }
+  return ret;
 }
 
 static void

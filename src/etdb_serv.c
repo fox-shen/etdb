@@ -47,10 +47,14 @@ etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
   etdb_bytes_t resp;
   etdb_queue_init(&(resp.queue));
 
+  if(conn->pool_temp == NULL){
+    conn->pool_temp = etdb_create_pool(ETDB_CONNECTION_DEFAULT_POOL_SIZE); 
+  }
+
   if(cmd == NULL || etdb_serv_parse_args(req, cmd) < 0){
     etdb_bytes_t n;
     size_t len = sizeof("Unkown Command: ") - 1 + (((etdb_bytes_t*)(req->queue.next))->str).len + etdb_bytes_total_len(req);
-    char *head = etdb_palloc_temp(conn->pool_temp, len);
+    char *head = etdb_palloc(conn->pool_temp, len);
     char *pos  = memcpy(head, "Unkown Command: ", sizeof("Unkown Command: ") - 1) + sizeof("Unkown Command: ") - 1;
     etdb_bytes_total_copy(pos, req);
     
@@ -72,5 +76,9 @@ etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
 
   if(conn->buf_out->size > 0){
     etdb_event_mgr_set(&etdb_event_mgr, ETDB_CONN_FD(conn), FDEVENT_OUT, 1, conn);
+  }
+  if(conn->pool_temp){
+    etdb_destroy_pool(conn->pool_temp); 
+    conn->pool_temp = NULL;
   } 
 }

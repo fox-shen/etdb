@@ -20,6 +20,7 @@ etdb_database_update(const uint8_t *key, size_t key_len, const uint8_t *value, s
   uint32_t *nvalue = etdb_alloc(sizeof(uint32_t) + value_len);
   *nvalue          = value_len;
   memcpy(nvalue + 1, value, value_len);
+
   if( etdb_trie_update(&(etdb_database->trie), key, key_len, (intptr_t)(nvalue)) < 0){ 
     etdb_free((void*)nvalue);
     return -1;
@@ -40,12 +41,40 @@ etdb_database_exact_match(const uint8_t *key, size_t key_len, uint8_t **value, s
 }
 
 int 
+etdb_database_common_prefix_match(const uint8_t *key, size_t key_len, etdb_pool_t *pool, etdb_bytes_t *resp)
+{
+  etdb_stack_t stack_result;
+  etdb_stack_init(&stack_result, pool, 1, sizeof(etdb_id_t));
+  etdb_trie_common_prefix_search(&(etdb_database->trie), key, key_len, &stack_result); 
+
+  while(!etdb_stack_empty(&stack_result)){
+    etdb_id_t old           = *(etdb_id_t*)etdb_stack_pop(&stack_result);
+
+    etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(pool, sizeof(etdb_bytes_t));
+    new_bytes->str.data     = (uint8_t*)old + sizeof(uint32_t);
+    new_bytes->str.len      = *((uint32_t*)old);  
+
+    etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue)); 
+  }
+
+  return 0;
+}
+
+int 
+etdb_database_common_prefix_path_match(const uint8_t *key, size_t key_len, etdb_pool_t *pool, etdb_bytes_t *resp)
+{
+  etdb_stack_t stack_in;
+  etdb_stack_init(&stack_in, pool, 1, sizeof(uint8_t));
+  etdb_trie_common_prefix_path_search(&(etdb_database->trie), key, key_len, &stack_in, resp, pool); 
+}
+
+int 
 etdb_database_erase(const uint8_t *key, size_t key_len)
 {
   etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), key, key_len); 
   if(p_value < 0)  return -1;
   
-  etdb_free((uint32_t*)p_value);
+  etdb_free((void*)p_value);
   return 0;
 }
 

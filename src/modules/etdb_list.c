@@ -55,7 +55,7 @@ etdb_list_lpush_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
   *dst--              = (uint8_t)name->str.len;
   *dst                = ETDB_LIST_HEAD;
 
-  return etdb_database_list_lpush(dst, name->str.len + name->str.data - dst + 1, 
+  return etdb_database_list_lpush(dst, name->str.len + name->str.data - dst, 
                                   value->str.data, value->str.len);
 }
 
@@ -70,7 +70,7 @@ etdb_list_rpush_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
   *dst--               = (uint8_t)name->str.len;
   *dst                 = ETDB_LIST_HEAD;
 
-  return etdb_database_list_rpush(dst, name->str.len + name->str.data - dst + 1,
+  return etdb_database_list_rpush(dst, name->str.len + name->str.data - dst,
                                   value->str.data, value->str.len);
 }
 
@@ -86,12 +86,12 @@ etdb_list_lpop_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
 
   uint8_t *value       = NULL;
   size_t value_len     = 0;
-  int ret = etdb_database_list_lpop(dst, name->str.len + name->str.data - dst + 1,
+  int ret = etdb_database_list_lpop(dst, name->str.len + name->str.data - dst,
                                     &value, &value_len);
   if(ret < 0){
      return -1;
   }
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool, sizeof(etdb_bytes_t) + value_len);
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool, sizeof(etdb_bytes_t) + value_len);
   new_bytes->str.data     = (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
   new_bytes->str.len      =  value_len;
   memcpy(new_bytes->str.data, value, value_len);
@@ -113,12 +113,12 @@ etdb_list_rpop_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
 
   uint8_t *value       = NULL;
   size_t value_len     = 0;
-  int ret = etdb_database_list_rpop(dst, name->str.len + name->str.data - dst + 1,
+  int ret = etdb_database_list_rpop(dst, name->str.len + name->str.data - dst,
                                     &value, &value_len);
   if(ret < 0){
      return -1;
   }
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool, sizeof(etdb_bytes_t) + value_len);
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool, sizeof(etdb_bytes_t) + value_len);
   new_bytes->str.data     = (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
   new_bytes->str.len      = value_len;
   memcpy(new_bytes->str.data, value, value_len);

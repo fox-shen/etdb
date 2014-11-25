@@ -42,6 +42,4 @@ int etdb_pfree(etdb_pool_t *pool, void *p);
 void* etdb_palloc_large(etdb_pool_t *pool, size_t size);
 void* etdb_prealloc_large(etdb_pool_t *pool, void *raw, size_t size);
 
-void* etdb_palloc_temp(etdb_pool_t *pool, size_t size);
-
 #endif

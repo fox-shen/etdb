@@ -121,7 +121,7 @@ etdb_sidx_sget_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
   double *pd = (double*)value;
   sprintf(temp, "%f, %f", *pd, *(pd + 1));
 
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool_temp,
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp,
                                                sizeof(etdb_bytes_t) + strlen(temp));
   new_bytes->str.len    =  strlen(temp);
   new_bytes->str.data   =  (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
@@ -161,7 +161,7 @@ etdb_sidx_srect_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
 static int 
 etdb_sidx_sknn_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool_temp, sizeof(etdb_bytes_t));
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, sizeof(etdb_bytes_t));
   new_bytes->str.len    =  strlen("knn");
   new_bytes->str.data   =  "knn";
   etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
@@ -175,7 +175,7 @@ etdb_sidx_sinfo_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
   etdb_geo_hash_box_dimension_t dim = etdb_geo_hash_dimensions_for_precision(ETDB_GEO_HASH_PRECISION);
   sprintf(temp, "range: %f %f", dim.width, dim.height);
 
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool_temp, 
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, 
                                                sizeof(etdb_bytes_t) + strlen(temp));
   new_bytes->str.data    =  (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
   new_bytes->str.len     =  strlen(temp);

@@ -199,12 +199,14 @@ etdb_cli_cycle()
       if(resp_cnt > 1)
         bb = (etdb_bytes_t*)(qq->next);
 
-      char data[1024];
-      memset(data, 0, sizeof(data));
-      memcpy(data, bb->str.data, bb->str.len);  
-      printf("%s\n", data);
-      fflush(stdout);
-      responsed = 1;
+      for( ; bb != req; bb = (etdb_bytes_t*)bb->queue.next){
+        char data[1024];
+        memset(data, 0, sizeof(data));
+        memcpy(data, bb->str.data, bb->str.len);  
+        printf("%s\n", data);
+        fflush(stdout);
+        responsed = 1;
+      }
     }
   }
 }

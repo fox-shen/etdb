@@ -14,9 +14,11 @@ struct etdb_database_s{
 
 int etdb_database_init();
 
-/*** kv and hash related opertation ***/
+/*** kv , hash, set related opertation ***/
 int etdb_database_update(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len);
 int etdb_database_exact_match(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len);
+int etdb_database_common_prefix_match(const uint8_t *key, size_t key_len, etdb_pool_t *pool, etdb_bytes_t *resp);
+int etdb_database_common_prefix_path_match(const uint8_t *key, size_t key_len, etdb_pool_t *pool, etdb_bytes_t *resp);
 int etdb_database_erase(const uint8_t *key, size_t key_len);
 
 /*** list operation ***/

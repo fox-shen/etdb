@@ -29,13 +29,18 @@ struct etdb_trie_node_s{
   etdb_id_t check;                                 /** negative means next empty index **/
 };
 
-//#define ETDB_TRIE_REDUCED
+#define ETDB_TRIE_NO_PATH            -1
+#define ETDB_TRIE_NO_VALUE           -2
+#define ETDB_TRIE_NULL_VALUE         -3
 
-#define ETDB_TRIE_NO_PATH            -2
-#define ETDB_TRIE_NO_VALUE           -1
 #define ETDB_TRIE_NUM_TRACKING_NODES 0
-#define ETDB_TRIE_VALUE_LIMIT        0xefffffffffffffff
 #define ETDB_TRIE_MAX_TRIAL          1
+
+#if __WORDSIZE == 64
+#define ETDB_TRIE_VALUE_LIMIT        0xefffffffffffffff
+#else
+#define ETDB_TRIE_VALUE_LIMIT        0xefffffff
+#endif
 
 typedef struct etdb_trie_s etdb_trie_t;
 struct etdb_trie_s{
@@ -68,7 +73,10 @@ extern etdb_id_t
 etdb_trie_exact_match_search(etdb_trie_t *trie, const char *key, size_t len);
 
 extern void
-etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, etdb_id_t *array, size_t *size, etdb_pool_t *pool);
+etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, etdb_stack_t *stack_result);
+
+extern int
+etdb_trie_common_prefix_path_search(etdb_trie_t *trie, const char *key, size_t len, etdb_stack_t *stack_in, etdb_bytes_t *result, etdb_pool_t *pool);
 
 /*** delete trie ***/
 extern etdb_id_t

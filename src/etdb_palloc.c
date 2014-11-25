@@ -150,25 +150,6 @@ etdb_pnalloc(etdb_pool_t *pool, size_t size)
 }
 
 void* 
-etdb_palloc_temp(etdb_pool_t *pool, size_t size)
-{
-  if(size <= pool->max){
-    etdb_pool_t *p = pool->current;
-    uint8_t *m;
-    do{
-       m = p->d.last;
-       if((size_t)(p->d.end - m) >= size){
-         return m;
-       }
-       p = p->d.next;
-    }while(p);
-    m = etdb_palloc_block(pool, 0);
-    return m;
-  }
-  return NULL;
-}
-
-void* 
 etdb_pcalloc(etdb_pool_t *pool, size_t size)
 {
   void *p = etdb_palloc(pool, size);

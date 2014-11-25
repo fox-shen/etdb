@@ -55,7 +55,7 @@ etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
                                  sizeof("\nmem: ") - 1  + strlen(info_mem_str) +
                                  sizeof("\nkeys: ") - 1 + strlen(info_keys_str);
 
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc_temp(conn->pool, 
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool, 
                                                             sizeof(etdb_bytes_t) + resp_len);
   uint8_t *pos = (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
   pos          = memcpyn(pos, "version: ", sizeof("version: ") - 1);
