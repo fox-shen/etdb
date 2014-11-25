@@ -8,7 +8,7 @@ static int etdb_sidx_sinfo_handler(etdb_bytes_t *args, etdb_connection_t *conn, 
 
 #define ETDB_SOID_HEAD  'a'
 #define ETDB_SIDX_HEAD  'b'
-#define ETDB_GEO_HASH_PRECISION 9
+#define ETDB_GEO_HASH_PRECISION 7
 
 static etdb_command_t etdb_sidx_commands[] = {
   {
@@ -74,32 +74,39 @@ etdb_sidx_sset_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
   /*** step1: set (SID -> LON LAT) value ***/ 
   *(key->str.data - 1)  = ETDB_SOID_HEAD;
   ret = etdb_database_exact_match(key->str.data - 1, key->str.len + 1, &value, &value_len);
+  uint8_t *hash_code    = NULL;
 
   if(ret < 0){ 
     double values[] = {lat_d, lon_d};
     ret = etdb_database_update(key->str.data - 1, key->str.len + 1, (uint8_t*)values, sizeof(values));
     if(ret != 0)  return ret;
   }else{
-    double *pd =  (double*)value;
-    char hash_code[ETDB_GEO_HASH_PRECISION + 2];
-    hash_code[ETDB_GEO_HASH_PRECISION + 1] = '\0';
-    hash_code[0]   = ETDB_SIDX_HEAD;
-    if(etdb_geo_hash_encode(*pd, *(pd + 1), hash_code + 1, ETDB_GEO_HASH_PRECISION) == NULL)
+    double *pd         = (double*)value;
+    hash_code          = (uint8_t*)etdb_palloc(conn->pool_temp, ETDB_GEO_HASH_PRECISION + 2 + key->str.len);
+    hash_code[1]       = (uint8_t)ETDB_GEO_HASH_PRECISION;
+    hash_code[0]       = ETDB_SIDX_HEAD;
+
+    if(etdb_geo_hash_encode(*pd, *(pd + 1), hash_code + 2, ETDB_GEO_HASH_PRECISION) == NULL)
       return -1;
     *pd        =  lat_d;
     *(pd + 1)  =  lon_d;
-    if(etdb_database_list_remove(hash_code, ETDB_GEO_HASH_PRECISION + 1, 
-                                 key->str.data, key->str.len) != 0)
+
+    memcpy(hash_code + ETDB_GEO_HASH_PRECISION + 2, key->str.data, key->str.len);
+    if(etdb_database_erase(hash_code, ETDB_GEO_HASH_PRECISION + 2 + key->str.len) != 0)
       return -1;
   }
 
   /*** step2: set (LON LAT -> SID) value ***/
-  char hash_code[ETDB_GEO_HASH_PRECISION + 2];
-  hash_code[ETDB_GEO_HASH_PRECISION + 1] = '\0';
-  hash_code[0]   = ETDB_SIDX_HEAD;
-  if(etdb_geo_hash_encode(lat_d, lon_d, hash_code + 1, ETDB_GEO_HASH_PRECISION) == NULL)  
+  if(hash_code == NULL){
+     hash_code         = (uint8_t*)etdb_palloc(conn->pool_temp, ETDB_GEO_HASH_PRECISION + 2 + key->str.len);
+     hash_code[1]      = (uint8_t)ETDB_GEO_HASH_PRECISION;
+     hash_code[0]      = ETDB_SIDX_HEAD;
+     memcpy(hash_code + ETDB_GEO_HASH_PRECISION + 2, key->str.data, key->str.len);
+  }
+  if(etdb_geo_hash_encode(lat_d, lon_d, hash_code + 2, ETDB_GEO_HASH_PRECISION) == NULL)  
     return -1;
-  ret = etdb_database_list_rpush(hash_code, ETDB_GEO_HASH_PRECISION + 1, key->str.data, key->str.len);
+  
+  ret = etdb_database_update(hash_code, ETDB_GEO_HASH_PRECISION + 2 + key->str.len, "1", 1);
   if(ret != 0)  return ret; 
   return ret;
 }
@@ -110,14 +117,14 @@ etdb_sidx_sget_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
   etdb_bytes_t *key     = (etdb_bytes_t*)(args->queue.next->next);
   *(key->str.data - 1)  = ETDB_SOID_HEAD;
 
-  uint8_t *value = NULL;
-  size_t value_len = 0;
-  int ret = etdb_database_exact_match(key->str.data - 1, key->str.len + 1, &value, &value_len); 
+  uint8_t *value        = NULL;
+  size_t value_len      = 0;
+  int ret               = etdb_database_exact_match(key->str.data - 1, key->str.len + 1, &value, &value_len); 
 
   if(ret < 0){
      return -1; 
   }
-  char temp[256];
+  char temp[64];
   double *pd = (double*)value;
   sprintf(temp, "%f, %f", *pd, *(pd + 1));
 
@@ -150,11 +157,42 @@ etdb_sidx_srect_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
     return -1;
   } 
 
-  if(lon1_d < lon2_d)  etdb_swap(lon1_d, lon2_d)
-  if(lat1_d < lat2_d)  etdb_swap(lat1_d, lat2_d) 
+  if(lon1_d > lon2_d)  etdb_swap(lon1_d, lon2_d)
+  if(lat1_d > lat2_d)  etdb_swap(lat1_d, lat2_d) 
+  
+  char l_hash_code[ETDB_GEO_HASH_PRECISION + 1]    = "\0";
+  char r_hash_code[ETDB_GEO_HASH_PRECISION + 1]    = "\0";
+  char t_hash_code[ETDB_GEO_HASH_PRECISION + 1]    = "\0";
+  char iter_hash_code_g[ETDB_GEO_HASH_PRECISION + 3] = "\0";
+  char *iter_hash_code = iter_hash_code_g + 2;
+  
+  etdb_geo_hash_encode(lat1_d, lon1_d, l_hash_code, ETDB_GEO_HASH_PRECISION); 
+  etdb_geo_hash_encode(lat1_d, lon2_d, r_hash_code, ETDB_GEO_HASH_PRECISION);
+  etdb_geo_hash_encode(lat2_d, lon1_d, t_hash_code, ETDB_GEO_HASH_PRECISION);
+  
+  while(1)
+  {
+    memcpy(iter_hash_code, l_hash_code, ETDB_GEO_HASH_PRECISION);
 
-   
+    while(1){
+      /// TODO: Add code to process
+      iter_hash_code_g[0]  = ETDB_SIDX_HEAD;
+      iter_hash_code_g[1]  = ETDB_GEO_HASH_PRECISION;
+ 
+      etdb_database_common_prefix_path_match(iter_hash_code_g, ETDB_GEO_HASH_PRECISION + 2,
+                                             conn->pool_temp, resp);         
 
+      if(strncmp(iter_hash_code, r_hash_code, ETDB_GEO_HASH_PRECISION) == 0)
+        break;
+      etdb_geo_hash_get_neighbor(iter_hash_code, ETDB_GEO_HASH_PRECISION, EAST, iter_hash_code);
+    }  
+    
+    if(strncmp(l_hash_code, t_hash_code, ETDB_GEO_HASH_PRECISION) == 0)
+      break;
+  
+    etdb_geo_hash_get_neighbor(l_hash_code, ETDB_GEO_HASH_PRECISION, NORTH, l_hash_code); 
+    etdb_geo_hash_get_neighbor(r_hash_code, ETDB_GEO_HASH_PRECISION, NORTH, r_hash_code);
+  }
   return 0;
 }
 

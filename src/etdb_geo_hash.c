@@ -45,33 +45,25 @@ etdb_geo_hash_index_for_char(char c, const char *string)
   return index;
 }
 
-static char* 
-etdb_geo_hash_get_neighbor(char *hash, int direction)
+void 
+etdb_geo_hash_get_neighbor(char *hash, int char_amount, int direction, char *nei)
 {
-  int hash_length = strlen(hash);
-  char last_char = hash[hash_length - 1];
+  int hash_length = char_amount;
+  char last_char  = hash[hash_length - 1];
     
   int is_odd = hash_length % 2;
   const char **border = is_odd ? etdb_geo_hash_odd_borders : etdb_geo_hash_even_borders;
   const char **neighbor = is_odd ? etdb_geo_hash_odd_neighbors : etdb_geo_hash_even_neighbors; 
-    
-  char *base = (char*)malloc(sizeof(char) * 1);
-  base[0] = '\0';
-  strncat(base, hash, hash_length - 1);
-    
+ 
   if(etdb_geo_hash_index_for_char(last_char, border[direction]) != -1)
-     base = etdb_geo_hash_get_neighbor(base, direction);
+     etdb_geo_hash_get_neighbor(hash, hash_length - 1, direction, nei);
+  else
+     memcpy(nei, hash, hash_length - 1);
 
   int neighbor_index = etdb_geo_hash_index_for_char(last_char, neighbor[direction]);
   last_char = etdb_geo_hash_char_map[neighbor_index];
-        
-  char *last_hash = (char*)malloc(sizeof(char) * 2);
-  last_hash[0] = last_char;
-  last_hash[1] = '\0';
-  strcat(base, last_hash);
-  free(last_hash);
-    
-  return base;
+
+  nei[hash_length - 1] = last_char;
 }
 
 char* 
@@ -167,25 +159,20 @@ etdb_geo_hash_decode(char *hash, int char_amount)
   return coordinate;
 }
 
-
-char** 
-etdb_geo_hash_neighbors(char *hash)
-{
-  char** neighbors = NULL;    
+void 
+etdb_geo_hash_neighbors(char *hash, int char_amount, char **neighbors)
+{ 
   if(hash) {
-    // N, NE, E, SE, S, SW, W, NW
-    neighbors = (char**)malloc(sizeof(char*) * 8);
-        
-    neighbors[0] = etdb_geo_hash_get_neighbor(hash, NORTH);
-    neighbors[1] = etdb_geo_hash_get_neighbor(neighbors[0], EAST);
-    neighbors[2] = etdb_geo_hash_get_neighbor(hash, EAST);
-    neighbors[3] = etdb_geo_hash_get_neighbor(neighbors[2], SOUTH);
-    neighbors[4] = etdb_geo_hash_get_neighbor(hash, SOUTH);
-    neighbors[5] = etdb_geo_hash_get_neighbor(neighbors[4], WEST);                
-    neighbors[6] = etdb_geo_hash_get_neighbor(hash, WEST);
-    neighbors[7] = etdb_geo_hash_get_neighbor(neighbors[6], NORTH);        
+    // N, NE, E, SE, S, SW, W, NW       
+    etdb_geo_hash_get_neighbor(hash, char_amount, NORTH, neighbors[0]);
+    etdb_geo_hash_get_neighbor(neighbors[0], char_amount, EAST, neighbors[1]);
+    etdb_geo_hash_get_neighbor(hash, char_amount, EAST, neighbors[2]);
+    etdb_geo_hash_get_neighbor(neighbors[2], char_amount, SOUTH, neighbors[3]);
+    etdb_geo_hash_get_neighbor(hash,char_amount, SOUTH, neighbors[4]);
+    etdb_geo_hash_get_neighbor(neighbors[4],char_amount, WEST, neighbors[5]);                
+    etdb_geo_hash_get_neighbor(hash,char_amount, WEST, neighbors[6]);
+    etdb_geo_hash_get_neighbor(neighbors[6],char_amount, NORTH, neighbors[7]);        
   }
-  return neighbors;
 }
 
 etdb_geo_hash_box_dimension_t

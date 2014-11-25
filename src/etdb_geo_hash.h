@@ -58,8 +58,11 @@ etdb_geo_hash_decode(char* hash, int char_amount);
  *                  N, NE, E, SE, S, SW, W, NW
  * 					0, 1,  2,  3, 4,  5, 6, 7
  */ 
-extern char** 
-etdb_geo_hash_neighbors(char* hash);
+extern void 
+etdb_geo_hash_neighbors(char* hash, int char_amount, char **neighbors);
+
+extern void       
+etdb_geo_hash_get_neighbor(char *hash, int char_amount, int direction, char *nei);
 
 /*
  * Returns the width and height of a precision value.
