@@ -19,4 +19,6 @@ void etdb_fprintf(FILE *stream, const char *format, ...);
 int etdb_atof(const uint8_t *data, size_t len, double *ret);
 int etdb_atoi(const uint8_t *data, size_t len, int    *ret);
 
+void etdb_trim(etdb_str_t *str);
+
 #endif

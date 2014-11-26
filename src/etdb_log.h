@@ -8,12 +8,12 @@ struct etdb_log_s{
   int         log_level;
 };
 
-#define ETDB_LOG_DEBUG    1
-#define ETDB_LOG_INFO     2
-#define ETDB_LOG_WARN     3
-#define ETDB_LOG_ERR      4
+#define ETDB_LOG_DEBUG    0
+#define ETDB_LOG_INFO     1
+#define ETDB_LOG_WARN     2
+#define ETDB_LOG_ERR      3
 
-int  etdb_log_init(etdb_log_t *log,  uint8_t *log_file, int log_level);
+int  etdb_log_init(etdb_log_t *log,  const char *log_file, const char *log_level);
 void etdb_log_print(etdb_log_t *log, int log_level, const char *format, ...);
 
 #endif

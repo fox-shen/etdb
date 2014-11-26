@@ -123,3 +123,22 @@ etdb_atoi(const uint8_t *data, size_t len, int *ret)
   *ret = *ret * flag;
   return 0;
 }
+
+void 
+etdb_trim(etdb_str_t *str)
+{
+  uint8_t *data = str->data;
+  size_t   len  = str->len;
+  size_t   pos  = 0;
+  while(pos < len && data[pos] == ' ') ++pos;
+
+  str->data     = data + pos;
+  if(str->data == data + len){
+    str->data   = NULL;
+    str->len    = 0;
+  }else{
+    data        =  data + len - 1;
+    while(*data == ' ')  --data;
+    str->len    =  data - str->data + 1; 
+  }
+}

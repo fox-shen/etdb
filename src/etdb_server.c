@@ -49,9 +49,11 @@ etdb_init_signal()
 static void 
 etdb_init_server_conn()
 {
-  etdb_server_conn = etdb_connect_listen("0.0.0.0", 19000);
+  const char *ip   = etdb_file_config_get_string("IP",  "0.0.0.0");
+  int        port  = etdb_file_config_get_int("PORT", 19000);  
+  etdb_server_conn = etdb_connect_listen(ip, port);
   if(etdb_server_conn == NULL){
-    etdb_log_print(&etdb_log, ETDB_LOG_ERR, "listen 127.0.0.1:19000 failed");
+    etdb_log_print(&etdb_log, ETDB_LOG_ERR, "listen on %s:%d failed", ip, port);
   }
   etdb_event_mgr_init(&etdb_event_mgr);
   etdb_event_mgr_set(&etdb_event_mgr, ETDB_CONN_FD(etdb_server_conn), FDEVENT_IN, 0, etdb_server_conn);
@@ -65,7 +67,11 @@ etdb_init(int argc, char **argv)
     exit(1);
   }
   etdb_init_file_config(argv[1]);
-  etdb_log_init(&etdb_log, "log.txt", ETDB_LOG_INFO);
+
+  const char *log_file  = etdb_file_config_get_string("LOG_FILE",  "log.txt");
+  const char *log_level = etdb_file_config_get_string("LOG_LEVEL", "INFO");
+  etdb_log_init(&etdb_log, log_file, log_level);
+
   etdb_init_server_conn();
   etdb_init_signal();
   etdb_database_init();
