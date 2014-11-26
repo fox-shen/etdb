@@ -67,12 +67,8 @@ etdb_trie_init(etdb_trie_t *trie)
   if(etdb_trie_block_realloc(&(trie->block), 1,   0) == 0)
     return -1;
 
-#ifdef ETDB_TRIE_REDUCED
-  trie->node[0].base  = trie->node[0].check = -1; 
-#else
   trie->node[0].base  = 0;
   trie->node[0].check = -1; 
-#endif
   
   for(i = 1; i < 256; ++i){
     if(i == 1){
@@ -240,12 +236,6 @@ etdb_trie_pop_empty_node(etdb_trie_t *trie, const etdb_id_t base, const uint8_t 
       etdb_trie_transfer_block(trie, bi, &(trie->block_head_open), &(trie->block_head_close));
     }
   }
-#ifdef ETDB_TRIE_REDUCED
-  n->value = ETDB_TRIE_VALUE_LIMIT;
-  n->check = from;
-  if(base < 0)
-    trie->node[from].base = -(e ^ label) - 1;
-#else
   if(label)
     n->base  = -1;
   else
@@ -253,7 +243,7 @@ etdb_trie_pop_empty_node(etdb_trie_t *trie, const etdb_id_t base, const uint8_t 
   n->check   = from;
   if(base < 0)
     trie->node[from].base = e ^ label;
-#endif
+
   return e;
 }
 
@@ -347,11 +337,8 @@ etdb_trie_resolve(etdb_trie_t *trie, etdb_id_t *from_n, const etdb_id_t base_n, 
 {
   etdb_id_t to_pn   = base_n ^ label_n;
   etdb_id_t from_p  = trie->node[to_pn].check;
-#ifdef ETDB_TRIE_REDUCED
-  etdb_id_t base_p  = -(trie->node[from_p].base + 1);
-#else
   etdb_id_t base_p  = trie->node[from_p].base;
-#endif
+
   int flag = etdb_trie_consult(trie, base_n, base_p, trie->ninfo[*from_n].child, trie->ninfo[from_p].child);
   uint8_t child[256];
   uint8_t* const first = &child[0];
@@ -365,11 +352,8 @@ etdb_trie_resolve(etdb_trie_t *trie, etdb_id_t *from_n, const etdb_id_t base_n, 
   if(flag && *first == label_n)
     trie->ninfo[from].child = label_n;
 
-#ifdef ETDB_TRIE_REDUCED
-  trie->node[from].base = -base - 1;
-#else
   trie->node[from].base = base;
-#endif
+
   for(p = first; p <= last; ++p){
     const etdb_id_t to  = etdb_trie_pop_empty_node(trie, base, *p, from);
     const etdb_id_t to_ = base_ ^ *p;
@@ -378,18 +362,10 @@ etdb_trie_resolve(etdb_trie_t *trie, etdb_id_t *from_n, const etdb_id_t base_n, 
     etdb_trie_node_t *n  = trie->node + to;
     etdb_trie_node_t *n_ = trie->node + to_;
 
-#ifdef ETDB_TRIE_REDUCED
-    if((n->base = n_->base) < 0 && *p)
-#else
     if((n->base = n_->base) > 0 && *p)
-#endif
     {
-      uint8_t c  = trie->ninfo[to].child = trie->ninfo[to_].child;
-#ifdef ETDB_TRIE_REDUCED
-      etdb_id_t nb = -(n->base + 1); 
-#else
+      uint8_t c    = trie->ninfo[to].child = trie->ninfo[to_].child;
       etdb_id_t nb = n->base;
-#endif
       do{
         trie->node[nb ^ c].check = to;
       }while((c = trie->ninfo[nb ^ c].sibling));
@@ -401,14 +377,11 @@ etdb_trie_resolve(etdb_trie_t *trie, etdb_id_t *from_n, const etdb_id_t base_n, 
     if(!flag && to_ == to_pn){
       etdb_trie_push_sibling(trie, *from_n, to_pn ^ label_n, label_n, 1);
       trie->ninfo[to_].child = 0;
-#ifdef ETDB_TRIE_REDUCED
-      n_->value = ETDB_TRIE_VALUE_LIMIT;
-#else
+
       if(label_n) 
         n_->base = -1;
       else
         n_->value = 0;
-#endif
       n_->check = *from_n;
     }else{
       etdb_trie_push_empty_node(trie, to_);
@@ -430,12 +403,9 @@ etdb_trie_resolve(etdb_trie_t *trie, etdb_id_t *from_n, const etdb_id_t base_n, 
 static etdb_id_t
 etdb_trie_follow(etdb_trie_t *trie, etdb_id_t *from, const uint8_t label)
 {
-  etdb_id_t to = 0;
-#ifdef ETDB_TRIE_REDUCED
-  const etdb_id_t base = -(trie->node[*from].base + 1);
-#else
+  etdb_id_t to         = 0;
   const etdb_id_t base = trie->node[*from].base;
-#endif
+
   if(base < 0 || trie->node[to = base ^ label].check < 0){
     to = etdb_trie_pop_empty_node(trie, base, label, *from);
     etdb_trie_push_sibling(trie, *from, to ^ label, label, base >= 0);  
@@ -448,13 +418,6 @@ etdb_trie_follow(etdb_trie_t *trie, etdb_id_t *from, const uint8_t label)
 static void
 etdb_trie_update_entry(etdb_trie_t *trie, etdb_id_t *from, uint8_t word, uint8_t sp)
 {
-#ifdef ETDB_TRIE_REDUCED
-  const etdb_id_t val = trie->node[*from].value;
-  if(val >= 0 && val != ETDB_TRIE_VALUE_LIMIT){
-    const etdb_id_t to = etdb_trie_follow(trie, from, 0);
-    trie->node[to].value = val;
-  } 
-#endif
   /*** encode ***/
   if(!sp){
     if(word == '\0'){
@@ -485,14 +448,7 @@ etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, etdb_id_t value
     etdb_trie_update_entry(trie, &from, key_uint8[pos], 0);
   }
 
-#ifdef ETDB_TRIE_REDUCED
-  const etdb_id_t to = trie->node[from].value >= 0 ? from : etdb_trie_follow(trie, &from, 0);
-  if(trie->node[to].value == ETDB_TRIE_VALUE_LIMIT){
-    trie->node[to].value = 0;
-  }
-#else
   const etdb_id_t to = etdb_trie_follow(trie, &from, 0);
-#endif
   
   etdb_id_t p_value = trie->node[to].value;
   trie->node[to].value = value;
@@ -521,12 +477,7 @@ etdb_trie_find(etdb_trie_t *trie, const char *key, etdb_id_t *from, size_t pos, 
     }
   
 AGAIN:
-#ifdef ETDB_TRIE_REDUCED
-    if(trie->node[*from].value >= 0) break;
-    to = -(trie->node[*from].base + 1);
-#else
-    to = trie->node[*from].base;
-#endif
+    to         = trie->node[*from].base;
     to         = to ^ word;
     if(trie->node[to].check != *from)
       return ETDB_TRIE_NO_PATH;
@@ -537,14 +488,9 @@ AGAIN:
       goto AGAIN;
     }
     ++pos;
-  }
-#ifdef ETDB_TRIE_REDUCED
-  if(trie->node[*from].value >= 0)
-    return pos == len ? trie->node[*from].value : ETDB_TRIE_NO_PATH; 
-  etdb_trie_node_t *n = trie->node + ((-(trie->node[*from].base + 1)) ^ 0);
-#else 
+  } 
   etdb_trie_node_t *n = trie->node + (trie->node[*from].base ^ 0);
-#endif
+
   if(n->check != *from){
     return ETDB_TRIE_NO_VALUE;
   }
@@ -655,20 +601,13 @@ etdb_trie_common_prefix_path_search(etdb_trie_t *trie, const char *key, size_t l
 static void
 etdb_trie_erase_impl(etdb_trie_t *trie, etdb_id_t from)
 {
-#ifdef ETDB_TRIE_REDUCED
-  etdb_id_t e = trie->node[from].value >= 0 ? from : (-(trie->node[from].base + 1)) ^ 0;
-  from = trie->node[e].check;
-#else
   etdb_id_t e = trie->node[from].base ^ 0; 
-#endif
+
   uint8_t flag = 0; /*** have sibling ***/
   do{
-    etdb_trie_node_t *n = trie->node + from;
-#ifdef ETDB_TRIE_REDUCED
-    etdb_id_t nb          = -(n->base + 1);
-#else
+    etdb_trie_node_t *n   = trie->node + from;
     etdb_id_t nb          = n->base;
-#endif
+
     flag = trie->ninfo[nb ^ trie->ninfo[from].child].sibling;
     if(flag){
       etdb_trie_pop_sibling(trie, from, nb, nb ^ e);
@@ -714,13 +653,8 @@ etdb_trie_num_keys(etdb_trie_t *trie)
 {
   size_t i = 0, to = 0;
   for(; to < trie->size; ++to){
-#ifdef ETDB_TRIE_REDUCED
-    if(trie->node[to].check >= 0 && trie->node[to].value >= 0)
-      ++i;
-#else
     if(trie->node[to].check >= 0 && trie->node[trie->node[to].check].base == to)
       ++i;
-#endif
   }
   return i;
 }
