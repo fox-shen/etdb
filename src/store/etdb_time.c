@@ -1,4 +1,4 @@
-#include <etdb.h>
+#include <etdb_store_incs.h>
 
 long int 
 etdb_utls_get_timestamp()

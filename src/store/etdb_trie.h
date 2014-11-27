@@ -19,7 +19,7 @@ struct etdb_trie_block_s{
   etdb_id_t  next;
   int16_t    num;      /*** # empty elements: 0 - 256 ***/
   int16_t    reject;   /*** minimum # branching failed to locate ***/
-  int        trial;
+  int32_t    trial;
   etdb_id_t  ehead;   
 };
 
@@ -33,7 +33,6 @@ struct etdb_trie_node_s{
 #define ETDB_TRIE_NO_VALUE           -2
 #define ETDB_TRIE_NULL_VALUE         -3
 
-#define ETDB_TRIE_NUM_TRACKING_NODES 0
 #define ETDB_TRIE_MAX_TRIAL          1
 
 #if __WORDSIZE == 64
@@ -52,9 +51,7 @@ struct etdb_trie_s{
   etdb_id_t            block_head_open;
   etdb_id_t            capacity;
   etdb_id_t            size;
-  etdb_id_t            no_delete;
   etdb_id_t            reject[257]; 
-  etdb_id_t            tracking_node[ETDB_TRIE_NUM_TRACKING_NODES + 1];
 };
 
 /*** initialize trie ***/

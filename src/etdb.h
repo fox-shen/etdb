@@ -23,26 +23,15 @@
 
 #include <linenoise.h>
 
-#include <etdb_alloc.h>
-#include <etdb_palloc.h>
-#include <etdb_time.h>
-#include <etdb_string.h>
-#include <etdb_queue.h>
-#include <etdb_stack.h>
-#include <etdb_version.h>
-#include <etdb_bytes.h>
+#include <etdb_store_incs.h>
+
 #include <etdb_buf.h>
 #include <etdb_file_config.h>
-#include <etdb_log.h>
-
 #include <etdb_connection.h>
 #include <etdb_event.h>
 #include <etdb_resp.h>
 #include <etdb_serv.h>
-
 #include <etdb_geo_hash.h>
-#include <etdb_trie.h>
-
 #include <etdb_database.h>
 #include <etdb_config.h>
 

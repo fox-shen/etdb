@@ -348,6 +348,12 @@ etdb_exec_benchmark_kv()
     memcpy(requests_data[num], "del", 3);
   }
   etdb_exec_benchmark_cycle(requests_data);
+
+  fprintf(stdout, "Null Benchmark\n");
+  for(num = 0; num < etdb_request_num; ++num){
+    memcpy(requests_data[num], "nan", 3);
+  }
+  etdb_exec_benchmark_cycle(requests_data);
 }
 
 int 

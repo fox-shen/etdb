@@ -1,4 +1,4 @@
-#include <etdb.h>
+#include <etdb_store_incs.h>
 
 void* 
 etdb_alloc(size_t size)

@@ -1,4 +1,4 @@
-#include <etdb.h>
+#include <etdb_store_incs.h>
 
 etdb_pool_t* 
 etdb_create_pool(size_t size)

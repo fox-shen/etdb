@@ -84,7 +84,6 @@ etdb_trie_init(etdb_trie_t *trie)
   }
   trie->block[0].ehead = 1;
   trie->capacity       = trie->size = 256;
-  for(i = 0; i < ETDB_TRIE_NUM_TRACKING_NODES; ++i)  trie->tracking_node[i] = 0;
   for(i = 0; i <= 256; ++i) trie->reject[i] = i + 1;
   return 0;
 }
@@ -317,11 +316,6 @@ etdb_trie_set_child(etdb_trie_t *trie, uint8_t *p, const etdb_id_t base, uint8_t
     *++p = c;
     c = trie->ninfo[base ^ c].sibling;
   }
-  /*
-  while(c && c < label){
-    *++p = c;
-    c = trie->ninfo[base ^ c].sibling;
-  }*/
   if(label != -1){
     *++p = (uint8_t)label;
   }
@@ -386,16 +380,6 @@ etdb_trie_resolve(etdb_trie_t *trie, etdb_id_t *from_n, const etdb_id_t base_n, 
     }else{
       etdb_trie_push_empty_node(trie, to_);
     }
-
-    if(ETDB_TRIE_NUM_TRACKING_NODES){ /*** keep the traversed node updated**/
-      size_t j;
-      for(j = 0; trie->tracking_node[j] != 0; ++j){
-        if(trie->tracking_node[j] == to_){
-          trie->tracking_node[j] = to;
-          break;
-        }
-      }
-    }
   }  
   return flag ? base ^ label_n : to_pn;
 }
@@ -443,14 +427,13 @@ etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, etdb_id_t value
     return -1;
   
   const uint8_t *key_uint8 = (const uint8_t*)key;
-  int sp = 0;
   for( ; pos < len; ++(pos)){
     etdb_trie_update_entry(trie, &from, key_uint8[pos], 0);
   }
 
-  const etdb_id_t to = etdb_trie_follow(trie, &from, 0);
-  
-  etdb_id_t p_value = trie->node[to].value;
+  const etdb_id_t to   = etdb_trie_follow(trie, &from, 0); 
+  etdb_id_t p_value    = trie->node[to].value;
+
   trie->node[to].value = value;
   return p_value;
 }
