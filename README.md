@@ -26,5 +26,4 @@ you can use etdb_cli to play with etdb
   id1
   id2
 ```
-Enjoy!
   
