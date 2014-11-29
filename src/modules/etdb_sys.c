@@ -95,7 +95,19 @@ etdb_sys_help_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
 static int 
 etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
-  return -1;
+  switch (fork())
+  {
+    case -1:
+      return -1;
+
+    case 0:  /*** sub child do save operations ***/
+      etdb_database_sys_bgsave(); 
+      break;
+
+    default:
+      return 0;
+  }
+  return 0;
 }
 
 static int 

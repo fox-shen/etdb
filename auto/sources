@@ -16,6 +16,7 @@ ETDB_LIB_SRCS="src/etdb_buf.c \
                src/etdb_serv.c \
                src/etdb_event.c \
                src/etdb_database.c \
+               src/hietdb.c \
                src/linenoise.c \
                src/store/etdb_queue.c \
                src/store/etdb_alloc.c \

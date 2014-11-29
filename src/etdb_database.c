@@ -62,7 +62,7 @@ etdb_database_kv_del(etdb_str_t *key)
 }
 
 /**** db: hash type ****/
-#define ETDB_HASH_HEAD     ETDB_KV_HEAD + 1
+#define ETDB_HASH_HEAD     '1'
 #define etdb_database_encode_hash_head(hash_name, key)  \
 uint8_t *src = hash_name->data + hash_name->len - 1;    \
 uint8_t *dst = key->data - 1;                           \
@@ -118,7 +118,7 @@ etdb_database_hash_del(etdb_str_t *hash_name, etdb_str_t *key)
 }
 
 /**** db: set operation ***/
-#define ETDB_SET_HEAD     ETDB_HASH_HEAD + 1
+#define ETDB_SET_HEAD     '2'
 #define etdb_database_encode_set_head(set_name, key)    \
 uint8_t *src = set_name->data + set_name->len - 1;      \
 uint8_t *dst = key->data - 1;                           \
@@ -174,7 +174,7 @@ etdb_database_set_ismember(etdb_str_t *set_name, etdb_str_t *key)
 }
 
 /**** db: list type ****/
-#define ETDB_LIST_HEAD     ETDB_SET_HEAD + 1
+#define ETDB_LIST_HEAD     '3'
 #define etdb_database_encode_list_head(key) *(key->data - 1) = ETDB_LIST_HEAD
 
 int 
@@ -299,12 +299,50 @@ etdb_database_list_rtop(etdb_str_t *list_name, etdb_str_t *value)
   return 0;
 }
 
+/**** db: sptial point type ***/
+#define ETDB_SPATIAL_POINT_HEAD1   'a'     /// used for id->lon lat geohash.
+#define ETDB_SPATIAL_POINT_HEAD2   'b'     /// used for geohash predix -> lon lat geohash.
 
+int 
+etdb_database_sp_set(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon)
+{
+  int ret = 0;
+  double lat_d, lon_d;
+  if( etdb_atof(lat->data, lat->len, &lat_d) == -1 ||
+      etdb_atof(lon->data, lon->len, &lon_d) == -1 ||
+      lat_d < -90 || lat_d > 90 || lon_d < -180 || lon_d > 180)
+  {
+    return -1;
+  }
+  *(id->data - 1)    = ETDB_SPATIAL_POINT_HEAD1;
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), id->data - 1, id->len + 1);
+  if(p_value < 0) /*** first set location ***/
+  {
 
+  }else /*** later append location ***/
+  {
+    etdb_value_head_t *head = (etdb_value_head_t*)p_value;
+           
+  } 
+}
 
+int 
+etdb_database_sp_get(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon)
+{
 
+}
 
+int 
+etdb_database_sp_rect(etdb_str_t *lat1, etdb_str_t *lat2, etdb_str_t *lon1, etdb_str_t *lon2)
+{
 
+}
+
+int 
+etdb_database_sp_knn(etdb_str_t *id, etdb_str_t *k)
+{
+ 
+}
 
 const uint8_t*
 etdb_database_info_version()
@@ -324,7 +362,33 @@ etdb_database_info_keys()
   return etdb_trie_num_keys(&(etdb_database->trie));
 }
 
+void 
+etdb_database_sys_bgsave()
+{
+  const char *db_file_name = etdb_file_config_get_string("DB_FILE_NAME", "etdb.rdb");
+  FILE *fp = fopen(db_file_name, "wb");
+  if(fp == NULL){
 
+  }else{
+    /*** write trie head ***/
+    fwrite(&(etdb_database->trie.block_head_full),  sizeof(etdb_id_t), 1, fp);
+    fwrite(&(etdb_database->trie.block_head_close), sizeof(etdb_id_t), 1, fp);
+    fwrite(&(etdb_database->trie.block_head_open),  sizeof(etdb_id_t), 1, fp);
+    fwrite(&(etdb_database->trie.capacity), sizeof(etdb_id_t), 1, fp);
+    fwrite(&(etdb_database->trie.size), sizeof(etdb_id_t), 1, fp);
+    fwrite(&(etdb_database->trie.reject), sizeof(etdb_id_t), 257, fp);
+  
+    /*** write node ***/
+    fwrite(&(etdb_database->trie.node), sizeof(etdb_trie_node_t), etdb_database->trie.capacity, fp);
+    /*** write ninfo ***/
+    fwrite(&(etdb_database->trie.ninfo), sizeof(etdb_trie_ninfo_t), etdb_database->trie.capacity, fp);
+    /*** write block ***/
+    fwrite(&(etdb_database->trie.block), sizeof(etdb_trie_block_t), etdb_database->trie.capacity >> 8, fp);
+
+    fclose(fp);
+  }
+  exit(0);  
+}
 
 
 
