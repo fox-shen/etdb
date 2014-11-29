@@ -5,8 +5,6 @@ static int etdb_kv_set_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb
 static int etdb_kv_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_kv_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 
-#define ETDB_KV_HEAD '0'
-
 static etdb_command_t etdb_kv_commands[] = {
   {
     etdb_string("set"),
@@ -43,27 +41,24 @@ etdb_kv_set_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
 {
   etdb_bytes_t *key   = (etdb_bytes_t*)(args->queue.next->next);
   etdb_bytes_t *value = (etdb_bytes_t*)(key->queue.next);
- 
-  *(key->str.data - 1)= ETDB_KV_HEAD;
-  return etdb_database_update(key->str.data - 1, key->str.len + 1, value->str.data, value->str.len);
+
+  return etdb_database_kv_set(&key->str, &value->str);
 }
 
 static int 
 etdb_kv_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
   etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next); 
-  *(key->str.data - 1) = ETDB_KV_HEAD;
 
-  uint8_t *value = NULL;
-  size_t value_len = 0;
-  int ret = etdb_database_exact_match(key->str.data - 1, key->str.len + 1, &value, &value_len); 
+  etdb_str_t value     = etdb_null_string;
+  int ret = etdb_database_kv_get(&key->str, &value); 
 
   if(ret < 0){
      return -1; 
   }
   etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, sizeof(etdb_bytes_t));
-  new_bytes->str.len    =  value_len;
-  new_bytes->str.data   =  value;
+  new_bytes->str.len    =  value.len;
+  new_bytes->str.data   =  value.data;
   etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
   return 0; 
 }
@@ -72,7 +67,5 @@ static int
 etdb_kv_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
   etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next);
-  *(key->str.data - 1) = ETDB_KV_HEAD;
-
-  return etdb_database_erase(key->str.data - 1, key->str.len + 1); 
+  return etdb_database_kv_del(&key->str); 
 }

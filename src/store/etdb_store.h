@@ -50,12 +50,12 @@ typedef struct etdb_store_index_block_s{
 }etdb_store_index_block_t;
 
 typedef struct etdb_store_s{
-  etdb_id_t   block_head_full;
-  etdb_id_t   block_head_close;
-  etdb_id_t   block_head_open;
-  etdb_id_t   capacity;
-  etdb_id_t   size;
-  etdb_id_t   reject[257];
+  etdb_store_id_t   block_head_full;
+  etdb_store_id_t   block_head_close;
+  etdb_store_id_t   block_head_open;
+  etdb_store_id_t   capacity;
+  etdb_store_id_t   size;
+  etdb_store_id_t   reject[257];
 
   etdb_store_index_node_t  node;
   etdb_store_index_ninfo_t ninfo;
@@ -74,5 +74,6 @@ typedef struct etdb_store_option_s{
 }etdb_store_option_t;
 
 extern int etdb_init_store(etdb_store_t *store, etdb_log_t *log, etdb_store_option_t *option);
+extern int etdb_store_update(etdb_store_t *store, uint8_t *key, uint32_t kl, uint8_t *value, uint32_t vl);
 
 #endif

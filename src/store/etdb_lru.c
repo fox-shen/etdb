@@ -49,7 +49,7 @@ etdb_lru_fetch(etdb_lru_t *lru, etdb_store_id_t page_id)
     n                   = (etdb_lru_node_t*)((uint8_t*)top - offset);     
     etdb_queue_remove(&(n->hash_link));
   }else{
-    etdb_lru_node_t *n  = etdb_palloc(lru->pool, sizeof(etdb_lru_node_t));
+    n                   = etdb_palloc(lru->pool, sizeof(etdb_lru_node_t));
     n->page_value       = etdb_palloc(lru->pool, ETDB_PAGE_SIZE);
     ++lru->size;
   } 
@@ -81,9 +81,9 @@ etdb_lru_alloc_entry(etdb_lru_t *lru, etdb_store_id_t page_id)
     n                   = (etdb_lru_node_t*)((uint8_t*)top - offset);
     etdb_queue_remove(&(n->hash_link));
   }else{
-    etdb_lru_node_t *n  = etdb_palloc(lru->pool, sizeof(etdb_lru_node_t));
+    n                   = etdb_palloc(lru->pool, sizeof(etdb_lru_node_t));
     n->page_value       = etdb_palloc(lru->pool, ETDB_PAGE_SIZE);
-    ++lru->size;
+    ++(lru->size);
   }
   n->page_id            = page_id;
 

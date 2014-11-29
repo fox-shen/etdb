@@ -14,6 +14,297 @@ etdb_database_init()
   return 0;
 }
 
+/*** db: kv type ****/
+#define ETDB_KV_HEAD       '0'
+#define etdb_database_encode_kv_head(key) *(key->data - 1) = ETDB_KV_HEAD
+
+int 
+etdb_database_kv_set(etdb_str_t *key, const etdb_str_t *value)
+{
+  etdb_database_encode_kv_head(key);
+
+  etdb_value_head_t *head   = (etdb_value_head_t*)etdb_alloc(sizeof(etdb_value_head_t) + value->len);
+  head->size                = value->len;
+  head->type                = 0; 
+  memcpy(head + 1, value->data, value->len);
+
+  if( etdb_trie_update(&(etdb_database->trie), key->data - 1, key->len + 1, (intptr_t)(head)) < 0){
+    etdb_free((void*)head);
+    return -1;
+  }
+  return 0;   
+}
+
+int 
+etdb_database_kv_get(etdb_str_t *key, etdb_str_t *value)
+{
+  etdb_database_encode_kv_head(key);
+
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key->data - 1, key->len + 1);
+  if(p_value < 0)   return -1;
+
+  etdb_value_head_t *head = (etdb_value_head_t*)p_value;
+  value->len              = head->size;
+  value->data             = (uint8_t*)(head + 1);
+  return 0;
+}
+
+int 
+etdb_database_kv_del(etdb_str_t *key)
+{
+  etdb_database_encode_kv_head(key);
+ 
+  etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), key->data - 1, key->len + 1);
+  if(p_value < 0)  return -1;
+
+  etdb_free((void*)p_value);
+  return 0; 
+}
+
+/**** db: hash type ****/
+#define ETDB_HASH_HEAD     ETDB_KV_HEAD + 1
+#define etdb_database_encode_hash_head(hash_name, key)  \
+uint8_t *src = hash_name->data + hash_name->len - 1;    \
+uint8_t *dst = key->data - 1;                           \
+size_t pos = 0;                                         \
+while(pos){                                             \
+  *dst-- = *src--;                                      \
+  --pos;                                                \
+}                                                       \
+*dst--  =  (uint8_t)hash_name->len;                     \
+*dst    =  ETDB_HASH_HEAD
+
+int 
+etdb_database_hash_set(etdb_str_t *hash_name, etdb_str_t *key, const etdb_str_t *value)
+{
+  etdb_database_encode_hash_head(hash_name, key);
+
+  etdb_value_head_t *head   = (etdb_value_head_t*)etdb_alloc(sizeof(etdb_value_head_t) + value->len);
+  head->size                = value->len;
+  head->type                = 0;
+  memcpy(head + 1, value->data, value->len);
+
+  if( etdb_trie_update(&(etdb_database->trie), dst, key->data + key->len - dst, (intptr_t)(head)) < 0){
+    etdb_free((void*)head);
+    return -1;
+  }
+  return 0; 
+}
+
+int 
+etdb_database_hash_get(etdb_str_t *hash_name, etdb_str_t *key, etdb_str_t *value)
+{
+  etdb_database_encode_hash_head(hash_name, key);
+
+  etdb_id_t p_value = etdb_trie_exact_match_search(&(etdb_database->trie), dst, key->data + key->len - dst);
+  if(p_value < 0)   return -1;
+
+  etdb_value_head_t *head = (etdb_value_head_t*)p_value;
+  value->len              = head->size;
+  value->data             = (uint8_t*)(head + 1);
+  return 0; 
+}
+
+int 
+etdb_database_hash_del(etdb_str_t *hash_name, etdb_str_t *key)
+{
+  etdb_database_encode_hash_head(hash_name, key);
+
+  etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), dst, key->data + key->len - dst);
+  if(p_value < 0)  return -1;
+
+  etdb_free((void*)p_value);
+  return 0; 
+}
+
+/**** db: set operation ***/
+#define ETDB_SET_HEAD     ETDB_HASH_HEAD + 1
+#define etdb_database_encode_set_head(set_name, key)    \
+uint8_t *src = set_name->data + set_name->len - 1;      \
+uint8_t *dst = key->data - 1;                           \
+size_t pos = 0;                                         \
+while(pos){                                             \
+  *dst-- = *src--;                                      \
+  --pos;                                                \
+}                                                       \
+*dst--  =  (uint8_t)set_name->len;                      \
+*dst    =  ETDB_SET_HEAD
+
+int 
+etdb_database_set_add(etdb_str_t *set_name, etdb_str_t *key)
+{
+  etdb_database_encode_set_head(set_name, key);
+
+  if( etdb_trie_update(&(etdb_database->trie), dst, key->data + key->len - dst, 1) < 0){
+    return -1;
+  }
+  return 0; 
+}
+
+int 
+etdb_database_set_del(etdb_str_t *set_name, etdb_str_t *key)
+{
+  etdb_database_encode_set_head(set_name, key);
+  etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), dst, key->data + key->len - dst);
+  if(p_value < 0)  return -1;
+  return 0;
+}
+
+int 
+etdb_database_set_members(etdb_str_t *set_name, etdb_pool_t *pool, etdb_bytes_t *resp)
+{
+  static char set_name_key[512];
+  etdb_str_t key = {0, set_name_key + 512};
+
+  etdb_database_encode_set_head(set_name, (&key));
+
+  etdb_stack_t stack_in;
+  etdb_stack_init(&stack_in, pool, 1, sizeof(uint8_t));
+  etdb_trie_common_prefix_path_search(&(etdb_database->trie), dst, key.data + key.len - dst, &stack_in, resp, pool);
+  return 0;
+}
+
+int 
+etdb_database_set_ismember(etdb_str_t *set_name, etdb_str_t *key)
+{
+  etdb_database_encode_set_head(set_name, key);
+  etdb_id_t p_value = etdb_trie_exact_match_search(&(etdb_database->trie), dst, key->data + key->len - dst);
+  if(p_value < 0)   return 0;
+  return 1;
+}
+
+/**** db: list type ****/
+#define ETDB_LIST_HEAD     ETDB_SET_HEAD + 1
+#define etdb_database_encode_list_head(key) *(key->data - 1) = ETDB_LIST_HEAD
+
+int 
+etdb_database_list_lpush(etdb_str_t *list_name, etdb_str_t *value)
+{
+  etdb_database_encode_list_head(list_name);
+
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+  if(p_value < 0){ /**** alloc new list head ****/
+     etdb_list_t *head     = etdb_list_new();
+     etdb_list_lpush(head, value->data, value->len);
+     if( etdb_trie_update(&(etdb_database->trie), list_name->data - 1, list_name->len + 1, (intptr_t)(head)) < 0 ){
+       etdb_queue_free(&(head->queue));
+       return -1;
+     }
+  }else{ /*** only lpush ****/
+     etdb_list_t *head      = (etdb_list_t*)p_value;
+     etdb_list_lpush(head, value->data, value->len);
+  }
+  return 0;  
+}
+
+int 
+etdb_database_list_rpush(etdb_str_t *list_name, etdb_str_t *value)
+{
+  etdb_database_encode_list_head(list_name);
+
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+  if(p_value < 0){ /**** alloc new list head ****/
+     etdb_list_t *head     = etdb_list_new();
+     etdb_list_rpush(head, value->data, value->len);
+     if( etdb_trie_update(&(etdb_database->trie), list_name->data - 1, list_name->len + 1, (intptr_t)(head)) < 0){
+       etdb_queue_free(&(head->queue));
+       return -1;
+     }
+  }else{ /*** only lpush ****/
+     etdb_list_t *head      = (etdb_list_t*)p_value;
+     etdb_list_rpush(head, value->data, value->len);
+  }
+  return 0;   
+}
+
+int 
+etdb_database_list_lpop(etdb_str_t *list_name, etdb_str_t *value)
+{
+  etdb_database_encode_list_head(list_name);
+
+  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+  if(p_value < 0){
+    return -1;
+  }
+  etdb_list_t *head = (etdb_list_t*)p_value;
+  if(etdb_list_empty(head))  return -1;
+
+  etdb_list_t *l    = (etdb_list_t*)(head->queue.next);
+  etdb_queue_remove(&(l->queue));
+  value->data       = l->data;
+  value->len        = l->size;
+
+  if(etdb_queue_empty(&(head->queue))){
+    etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+    if(p_value < 0)  return -1;
+    etdb_free((void*)p_value);
+  }
+  return 0;
+}
+
+int 
+etdb_database_list_rpop(etdb_str_t *list_name, etdb_str_t *value)
+{
+  etdb_database_encode_list_head(list_name);
+
+  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+  if(p_value < 0)   return -1;
+
+  etdb_list_t *head = (etdb_list_t*)p_value;
+  if(etdb_list_empty(head))  return -1;
+
+  etdb_list_t *l    = (etdb_list_t*)(head->queue.prev);
+  etdb_queue_remove(&(l->queue));
+  value->data       = l->data;
+  value->len        = l->size;
+
+  if(etdb_queue_empty(&(head->queue))){
+    etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+    if(p_value < 0)  return -1;
+    etdb_free((void*)p_value);
+  }
+  return 0;
+}
+
+int 
+etdb_database_list_ltop(etdb_str_t *list_name, etdb_str_t *value)
+{
+  etdb_database_encode_list_head(list_name);
+  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+  if(p_value < 0){
+    return -1;
+  }
+  etdb_list_t *head = (etdb_list_t*)p_value;
+  if(etdb_list_empty(head))  return -1;
+
+  etdb_list_t *l    = (etdb_list_t*)(head->queue.next);
+  value->data       = l->data;
+  value->len        = l->size;
+  return 0;
+}
+
+int 
+etdb_database_list_rtop(etdb_str_t *list_name, etdb_str_t *value)
+{
+  etdb_database_encode_list_head(list_name);
+  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), list_name->data - 1, list_name->len + 1);
+  if(p_value < 0)   return -1;
+
+  etdb_list_t *head = (etdb_list_t*)p_value;
+  if(etdb_list_empty(head))  return -1;
+
+  etdb_list_t *l    = (etdb_list_t*)(head->queue.prev);
+  value->data       = l->data;
+  value->len        = l->size;
+  return 0;
+}
+
+
+
+
+
+
+
 int 
 etdb_database_update(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
 {
@@ -78,81 +369,6 @@ etdb_database_erase(const uint8_t *key, size_t key_len)
   return 0;
 }
 
-int 
-etdb_database_list_lpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
-{
-  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
-  if(p_value < 0){ /**** alloc new list head ****/
-     etdb_list_t *head     = etdb_list_new();
-     etdb_list_lpush(head, value, value_len);
-     if( etdb_trie_update(&(etdb_database->trie), key, key_len, (intptr_t)(head)) < 0){
-       etdb_queue_free(&(head->queue));
-       return -1;
-     }
-  }else{ /*** only lpush ****/
-     etdb_list_t *head      = (etdb_list_t*)p_value;
-     etdb_list_lpush(head, value, value_len);
-  }
-  return 0;
-}
-
-int 
-etdb_database_list_rpush(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
-{
-  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
-  if(p_value < 0){ /**** alloc new list head ****/
-     etdb_list_t *head     = etdb_list_new();
-     etdb_list_rpush(head, value, value_len);
-     if( etdb_trie_update(&(etdb_database->trie), key, key_len, (intptr_t)(head)) < 0){
-       etdb_queue_free(&(head->queue));
-       return -1;
-     }
-  }else{ /*** only lpush ****/
-     etdb_list_t *head      = (etdb_list_t*)p_value;
-     etdb_list_rpush(head, value, value_len);
-  }
-  return 0;
-}
-
-int 
-etdb_database_list_lpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
-{
-  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
-  if(p_value < 0)   return -1;
-
-  etdb_list_t *head = (etdb_list_t*)p_value;
-  if(etdb_list_empty(head))  return -1;
-
-  etdb_list_t *l    = (etdb_list_t*)(head->queue.next);
-  etdb_queue_remove(&(l->queue));
-  *value            = l->data;
-  *value_len        = l->size;
-
-  if(etdb_queue_empty(&(head->queue))){
-    etdb_database_erase(key, key_len);
-  }
-  return 0;
-}
-
-int 
-etdb_database_list_rpop(const uint8_t *key, size_t key_len, uint8_t **value, size_t *value_len)
-{
-  etdb_id_t p_value   = etdb_trie_exact_match_search(&(etdb_database->trie), key, key_len);
-  if(p_value < 0)   return -1;
-
-  etdb_list_t *head = (etdb_list_t*)p_value;
-  if(etdb_list_empty(head))  return -1;
-  
-  etdb_list_t *l    = (etdb_list_t*)(head->queue.prev);
-  etdb_queue_remove(&(l->queue));
-  *value            = l->data;
-  *value_len        = l->size;
-
-  if(etdb_queue_empty(&(head->queue))){
-    etdb_database_erase(key, key_len);
-  }
-  return 0;
-}
 
 int
 etdb_database_list_remove(const uint8_t *key, size_t key_len, uint8_t *value, size_t value_len)

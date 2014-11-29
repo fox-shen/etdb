@@ -72,6 +72,9 @@ etdb_init(int argc, char **argv)
   const char *log_level = etdb_file_config_get_string("LOG_LEVEL", "INFO");
   etdb_log_init(&etdb_log, log_file, log_level);
 
+  if(etdb_file_config_get_int("DAEMON", 0)){
+    etdb_daemon();
+  }
   etdb_init_server_conn();
   etdb_init_signal();
   etdb_database_init();

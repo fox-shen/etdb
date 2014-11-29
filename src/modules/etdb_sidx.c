@@ -179,8 +179,8 @@ etdb_sidx_srect_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
       iter_hash_code_g[0]  = ETDB_SIDX_HEAD;
       iter_hash_code_g[1]  = ETDB_GEO_HASH_PRECISION;
  
-      etdb_database_common_prefix_path_match(iter_hash_code_g, ETDB_GEO_HASH_PRECISION + 2,
-                                             conn->pool_temp, resp);         
+      //etdb_database_common_prefix_path_match(iter_hash_code_g, ETDB_GEO_HASH_PRECISION + 2,
+      //                                       conn->pool_temp, resp);         
 
       if(strncmp(iter_hash_code, r_hash_code, ETDB_GEO_HASH_PRECISION) == 0)
         break;

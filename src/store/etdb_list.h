@@ -33,6 +33,7 @@ etdb_list_rpush(etdb_list_t *head, const uint8_t *value, size_t len)
   etdb_list_t *new_list = (etdb_list_t*)etdb_alloc(sizeof(etdb_list_t) + len);
   new_list->size        = len; 
   memcpy(new_list->data, value, len);
+
   etdb_queue_insert_tail(&(head->queue), &(new_list->queue));
   return 0;
 }
