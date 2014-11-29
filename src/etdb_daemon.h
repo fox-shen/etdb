@@ -6,45 +6,47 @@ extern pid_t etdb_pid;
 int
 etdb_daemon()
 {
-    int  fd;
-
-    switch (fork()) {
+  int  fd;
+  switch(fork()){
     case -1:
-        return -1;
+      return -1;
 
     case 0:
-        break;
+      break;
 
     default:
-        exit(0);
-    }
+      exit(0);
+  }
+  etdb_pid = getpid();
 
-    etdb_pid = getpid();
+  if(setsid() == -1){
+    return -1;
+  }
+  umask(0);
+  fd = open("/dev/null", O_RDWR);
+  if(fd == -1){
+    return -1;
+  }
+  if(dup2(fd, STDIN_FILENO) == -1){
+    return -1;
+  }
+  if(dup2(fd, STDOUT_FILENO) == -1) {
+    return -1;
+  }
+  if(dup2(fd, STDERR_FILENO) == -1){
+    return -1;
+  }
+  return 0;
+}
 
-    if (setsid() == -1) {
-        return -1;
-    }
+extern pid_t etdb_bgsave_pid;
 
-    umask(0);
-
-    fd = open("/dev/null", O_RDWR);
-    if (fd == -1) {
-        return -1;
-    }
-
-    if (dup2(fd, STDIN_FILENO) == -1) {
-        return -1;
-    }
-
-    if (dup2(fd, STDOUT_FILENO) == -1) {
-        return -1;
-    }
-
-    if(dup2(fd, STDERR_FILENO) == -1){
-        return -1;
-    }
-
-    return 0;
+void
+etdb_process_get_status()
+{
+  int status;
+  waitpid(-1, &status, WNOHANG); 
+  etdb_bgsave_pid = 0;
 }
 
 #endif

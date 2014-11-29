@@ -32,6 +32,9 @@ etdb_signal_handler(int sig)
     case SIGINT:
       etdb_quit = 1;
       break;
+    case SIGCHLD:
+      etdb_process_get_status();
+      break;
 
     default:
       break;
@@ -44,6 +47,7 @@ etdb_init_signal()
   signal(SIGPIPE, SIG_IGN);
   signal(SIGINT,  etdb_signal_handler);
   signal(SIGTERM, etdb_signal_handler);
+  signal(SIGCHLD, etdb_signal_handler);
 }
 
 static void 

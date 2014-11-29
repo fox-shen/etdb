@@ -92,10 +92,14 @@ etdb_sys_help_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
   return 0;
 }
 
+pid_t etdb_bgsave_pid = 0;
+
 static int 
 etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
-  switch (fork())
+  if(etdb_bgsave_pid > 0)  return -1;
+
+  switch(etdb_bgsave_pid = fork())
   {
     case -1:
       return -1;
