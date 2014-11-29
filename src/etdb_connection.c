@@ -220,8 +220,7 @@ etdb_connect_recv(etdb_connection_t *conn)
       return NULL;
     else
       return &(conn->recv_cmd); 
-  } 
-  return NULL;
+  }
 }
 
 void 
@@ -282,4 +281,16 @@ etdb_connect_send_cmd(etdb_connection_t *conn, uint8_t *cmd, size_t len)
   etdb_str_t fin_str = etdb_string("\n");
   etdb_buf_append_record(conn->buf_out, &fin_str);
   return 0;
+}
+
+int 
+etdb_connect_flush(etdb_connection_t *conn)
+{
+  int len = 0;
+  while(conn->buf_out->size > 0){
+    int ret = etdb_connect_write(conn);
+    if(ret == -1)  return -1;
+    len += ret;
+  }  
+  return len;
 }

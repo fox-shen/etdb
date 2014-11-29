@@ -4,7 +4,12 @@ echo "Prepare Sources"
 
 ETDB_INCS="src \
            src/store \
-           src/modules"
+           src/modules \
+           api/c"
+
+cp src/store/etdb_queue.h  api/c -f
+cp src/store/etdb_string.h api/c -f
+cp src/store/etdb_bytes.h  api/c -f
 
 ETDB_LIB_SRCS="src/etdb_buf.c \
                src/etdb_config.c \
@@ -41,6 +46,7 @@ ETDB_TEST_SRCS="test/etdb_test_alloc.c \
                 test/etdb_test_trie_erase.c \
                 test/etdb_test_trie_search.c \
                 test/etdb_test_trie_update.c \
+                test/etdb_test_client.c \
                 test/etdb_test_store.c"
 
 mkdir -p $ETDB_OBJS
