@@ -1,1 +1,3 @@
-an extensible memory database
+Building etdb
+-------------------
+
