@@ -49,9 +49,16 @@ int etdb_database_list_rpop(etdb_str_t *list_name, etdb_str_t *value);
 int etdb_database_list_ltop(etdb_str_t *list_name, etdb_str_t *value);
 int etdb_database_list_rtop(etdb_str_t *list_name, etdb_str_t *value);
 
+/**** db: spatial point index operation ****/
+int etdb_database_sp_set(etdb_str_t *list_name, etdb_str_t *value);
 
 
 
+
+/*** sys operation **/
+const uint8_t* etdb_database_info_version();
+size_t etdb_database_info_mem();
+size_t etdb_database_info_keys();
 
 
 
@@ -63,11 +70,5 @@ int etdb_database_exact_match(const uint8_t *key, size_t key_len, uint8_t **valu
 int etdb_database_common_prefix_match(const uint8_t *key, size_t key_len, etdb_pool_t *pool, etdb_bytes_t *resp);
 int etdb_database_common_prefix_path_match(const uint8_t *key, size_t key_len, etdb_pool_t *pool, etdb_bytes_t *resp);
 int etdb_database_erase(const uint8_t *key, size_t key_len);
-
-
-/*** sys operation **/
-const uint8_t* etdb_database_info_version();
-size_t etdb_database_info_mem();
-size_t etdb_database_info_keys();
 
 #endif

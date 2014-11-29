@@ -1,6 +1,7 @@
 #include <etdb.h>
 
 static int etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
+static int etdb_sys_help_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_sync_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 
@@ -14,7 +15,7 @@ static etdb_command_t etdb_sys_commands[] = {
   {
     etdb_string("help"),
     ETDB_CMD_FLAG_NOARG|ETDB_CMD_FLAG_ARG1,
-    etdb_sys_info_handler,
+    etdb_sys_help_handler,
     etdb_command_padding
   },
   {
@@ -55,7 +56,7 @@ etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
                                  sizeof("\nmem: ") - 1  + strlen(info_mem_str) +
                                  sizeof("\nkeys: ") - 1 + strlen(info_keys_str);
 
-  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool, 
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, 
                                                             sizeof(etdb_bytes_t) + resp_len);
   uint8_t *pos = (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
   pos          = memcpyn(pos, "version: ", sizeof("version: ") - 1);
@@ -67,6 +68,26 @@ etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
 
   new_bytes->str.len      =  resp_len;
   new_bytes->str.data     =  (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
+  etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
+  return 0;
+}
+
+static char etdb_help_msg[] = 
+"command list:\n\
+set get del                          key-value operation\n\
+hset hget hdel                       hashtable operation\n\
+sadd sdel smembers sismember         set operation\n\
+lpush rpush ltop rtop lpop rpop      list operation\n\
+siset siget sirect siknn siinfo      spatial index operation\n\
+bgsave                               system command\
+";
+
+static int 
+etdb_sys_help_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
+{
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, sizeof(etdb_bytes_t));
+  new_bytes->str.len      =  strlen(etdb_help_msg);
+  new_bytes->str.data     =  etdb_help_msg;
   etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
   return 0;
 }

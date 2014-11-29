@@ -12,31 +12,31 @@ static int etdb_sidx_sinfo_handler(etdb_bytes_t *args, etdb_connection_t *conn, 
 
 static etdb_command_t etdb_sidx_commands[] = {
   {
-    etdb_string("siset"),
+    etdb_string("spset"),
     ETDB_CMD_FLAG_ARG3,
     etdb_sidx_sset_handler,
     etdb_command_padding
   },
   {
-    etdb_string("siget"),
+    etdb_string("spget"),
     ETDB_CMD_FLAG_ARG1,
     etdb_sidx_sget_handler,
     etdb_command_padding
   },
   {
-    etdb_string("sirect"),
+    etdb_string("sprect"),
     ETDB_CMD_FLAG_ARG4,
     etdb_sidx_srect_handler,
     etdb_command_padding    
   },
   {
-    etdb_string("siknn"),
+    etdb_string("spknn"),
     ETDB_CMD_FLAG_ARG2|ETDB_CMD_FLAG_ARG3,
     etdb_sidx_sknn_handler,
     etdb_command_padding 
   },
   {
-    etdb_string("siinfo"),
+    etdb_string("sinfo"),
     ETDB_CMD_FLAG_NOARG,
     etdb_sidx_sinfo_handler,
     etdb_command_padding

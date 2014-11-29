@@ -496,9 +496,14 @@ static void
 etdb_trie_common_prefix_search_dfs(etdb_trie_t *trie, etdb_id_t from, etdb_stack_t *stack_out)
 {
   union{ etdb_id_t i; etdb_id_t value;}b;
-  uint8_t child = 1;
+  etdb_id_t base = trie->node[from].base;
+  uint8_t child  = trie->ninfo[from].child;
+  if(child == 0){
+    child = trie->ninfo[base ^ child].sibling;
+  }
  
-  do{
+  while(child != 0)
+  {
     etdb_id_t l_from = from;
     b.i = etdb_trie_find(trie, (const char*)&child, &l_from, 0, 1);
     if(b.i != ETDB_TRIE_NO_PATH)
@@ -509,14 +514,15 @@ etdb_trie_common_prefix_search_dfs(etdb_trie_t *trie, etdb_id_t from, etdb_stack
       }
       etdb_trie_common_prefix_search_dfs(trie, l_from, stack_out);
     }
-  }while(child++ != 255);
+    child = trie->ninfo[base ^ child].sibling;
+  }
 }
 
 void
 etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, etdb_stack_t *stack_result)
 {
   size_t pos = 0;
-  etdb_id_t from = 0;
+  etdb_id_t from = 0, to = 0;
   union{ etdb_id_t i; etdb_id_t value;} b;
   b.i = etdb_trie_find(trie, key, &from, pos, len);
 
@@ -536,9 +542,14 @@ etdb_trie_common_prefix_path_search_dfs(etdb_trie_t *trie, etdb_id_t from,
                                         etdb_stack_t *stack_in, etdb_bytes_t *result, etdb_pool_t *pool)
 {
   union{ etdb_id_t i; etdb_id_t value;}b;
-  uint8_t child = 1;
+  uint8_t child  = trie->ninfo[from].child;
+  etdb_id_t base = trie->node[from].base;
+  if(child == 0){
+    child = trie->ninfo[base ^ child].sibling;
+  }
 
-  do{
+  while(child != 0)
+  {
     etdb_id_t l_from = from;
     b.i = etdb_trie_find(trie, (const char*)&child, &l_from, 0, 1);
     if(b.i != ETDB_TRIE_NO_PATH)
@@ -557,7 +568,8 @@ etdb_trie_common_prefix_path_search_dfs(etdb_trie_t *trie, etdb_id_t from,
       etdb_trie_common_prefix_path_search_dfs(trie, l_from, stack_in, result, pool);
       etdb_stack_pop(stack_in);
     }
-  }while(child++ != 255);
+    child = trie->ninfo[base ^ child].sibling;
+  }
 }
 
 int

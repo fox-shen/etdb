@@ -305,6 +305,37 @@ etdb_database_list_rtop(etdb_str_t *list_name, etdb_str_t *value)
 
 
 
+
+const uint8_t*
+etdb_database_info_version()
+{
+  return ETDB_VERSION;
+}
+
+size_t
+etdb_database_info_mem()
+{
+  return etdb_trie_total_size(&(etdb_database->trie))*sizeof(etdb_trie_node_t);
+}
+
+size_t
+etdb_database_info_keys()
+{
+  return etdb_trie_num_keys(&(etdb_database->trie));
+}
+
+
+
+
+
+
+
+
+
+
+
+
+
 int 
 etdb_database_update(const uint8_t *key, size_t key_len, const uint8_t *value, size_t value_len)
 {
@@ -391,20 +422,3 @@ etdb_database_list_remove(const uint8_t *key, size_t key_len, uint8_t *value, si
   return -1;
 }
 
-const uint8_t* 
-etdb_database_info_version()
-{
-  return ETDB_VERSION;
-}
-
-size_t 
-etdb_database_info_mem()
-{
-  return etdb_trie_total_size(&(etdb_database->trie))*sizeof(etdb_trie_node_t); 
-}
-
-size_t 
-etdb_database_info_keys()
-{
-  return etdb_trie_num_keys(&(etdb_database->trie)); 
-}
