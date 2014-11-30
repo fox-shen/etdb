@@ -3,6 +3,7 @@
 static int etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_help_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
+static int etdb_sys_ping_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_sync_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 
 static etdb_command_t etdb_sys_commands[] = {
@@ -22,6 +23,12 @@ static etdb_command_t etdb_sys_commands[] = {
     etdb_string("bgsave"),
     ETDB_CMD_FLAG_NOARG,
     etdb_sys_bgsave_handler,
+    etdb_command_padding
+  },
+  {
+    etdb_string("ping"),
+    ETDB_CMD_FLAG_NOARG,
+    etdb_sys_ping_handler,
     etdb_command_padding
   },
   {
@@ -111,6 +118,12 @@ etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
     default:
       return 0;
   }
+  return 0;
+}
+
+static int 
+etdb_sys_ping_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
+{
   return 0;
 }
 

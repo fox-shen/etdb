@@ -17,7 +17,7 @@ END
 cat << END > $ETDB_OBJS_MAKEFILE
 
 CC = cc
-CFLAGS = $CFLAGS -O3 -pg 
+CFLAGS = $CFLAGS -O2 -pg 
 LIBS = libetdb.a
 EXES = etdb_server etdb_cli
 SYSLIBS = -lpthread -lm -lrt -lcrypto -lssl -lidn

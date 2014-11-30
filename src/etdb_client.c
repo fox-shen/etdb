@@ -349,9 +349,9 @@ etdb_exec_benchmark_kv()
   }
   etdb_exec_benchmark_cycle(requests_data);
 
-  fprintf(stdout, "Null Benchmark\n");
+  fprintf(stdout, "Ping Benchmark\n");
   for(num = 0; num < etdb_request_num; ++num){
-    memcpy(requests_data[num], "nan", 3);
+    memcpy(requests_data[num], "ping\0", 5);
   }
   etdb_exec_benchmark_cycle(requests_data);
 }
