@@ -210,17 +210,10 @@ etdb_connect_recv(etdb_connection_t *conn)
   size_t size   = conn->buf_in->size; 
   uint8_t *head = conn->buf_in->data;
  
-  if(head[0] == '*'){ /*** redis protocol  ***/
-    if( etdb_resp_recv_redis_req(conn) < 0)
-      return NULL;
-    else
-      return &(conn->recv_cmd);
-  }else{
-    if( etdb_resp_recv_req(conn) < 0 )
-      return NULL;
-    else
-      return &(conn->recv_cmd); 
-  }
+  if( etdb_resp_recv_req(conn) < 0 )
+    return NULL;
+  else
+    return &(conn->recv_cmd); 
 }
 
 void 
