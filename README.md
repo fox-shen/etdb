@@ -1,23 +1,14 @@
 ### Concurrency benchmark
 ```
 ========== set ==========
-qps: 44251, time: 0.226 s
+redis -> qps: 133265
+etdb  -> qps: 100000
 ========== get ==========
-qps: 55541, time: 0.180 s
+redis -> qps: 135541
+etdb  -> qps: 135135
 ========== del ==========
-qps: 46080, time: 0.217 s
-========== hset ==========
-qps: 42338, time: 0.236 s
-========== hget ==========
-qps: 55601, time: 0.180 s
-========== hdel ==========
-qps: 46529, time: 0.215 s
-========== zset ==========
-qps: 37381, time: 0.268 s
-========== zget ==========
-qps: 41455, time: 0.241 s
-========== zdel ==========
-qps: 38792, time: 0.258 s
+redis -> qps: 
+etdb  -> qps: 121951
 ```
 
 Building etdb
