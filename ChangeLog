@@ -1,0 +1,49 @@
+------------- v1.0.0 -----------
+1. kv data operation: set get del
+  % set a b
+  +OK
+  % get a
+  b
+  % del a
+  +FAIL
+
+2. hash data operation: hset hget hdel
+  % hset t1 a b
+  +OK
+  % hget t1 a
+  b
+  % hdel t1 a
+  +OK
+
+3. set data operation: sadd sdel smembers sismember
+  % sadd group mother
+  +OK
+  % sadd group father
+  +OK
+  % smembers group
+  mother
+  father
+  % sismember group mother
+  1
+
+4. list data operation: lpush rpush lpop rpop ltop rtop
+  % lpush l1 b1
+  +OK
+  % ltop l1
+  b1
+  % rpush l1 a1
+  +OK
+  % rtop l1
+  a1
+
+5. spatial point data operation: spset spget sprect spknn 
+  % spset glm 30 120
+  +OK
+  % spset baby 30.1 120.1
+  +OK
+  % sprect 29 31 120 121
+  glm
+  baby
+  % spknn glm 1
+  baby
+
