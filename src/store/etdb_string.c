@@ -33,6 +33,16 @@ etdb_str_tolower(uint8_t* data, size_t len)
   }
 }
 
+void   
+etdb_str_toupper(uint8_t* data, size_t len)
+{
+  size_t pos;
+  for(pos = 0; pos < len; ++pos){
+    if(data[pos] >= 'a' && data[pos] <= 'z')
+      data[pos] = 'A' + data[pos] - 'a';
+  }
+}
+
 static void
 etdb_vslprintf(FILE *stream, const char *format, va_list args)
 {

@@ -27,6 +27,7 @@ etdb_file_config_parse_line(const char *buf)
     memcpy(value + 1, splits[1].data, splits[1].len);
     *((uint8_t*)value + sizeof(size_t) + splits[1].len) = '\0';
 
+    etdb_str_toupper(splits[0].data, splits[0].len);
     etdb_trie_update(&etdb_config_trie, splits[0].data, splits[0].len, (intptr_t)(value));  
   } 
 }
