@@ -38,7 +38,7 @@ ETDB_LIB_SRCS="src/etdb_buf.c \
                src/modules/etdb_hash.c \
                src/modules/etdb_list.c \
                src/modules/etdb_set.c \
-               src/modules/etdb_sidx.c \
+               src/modules/etdb_spatial_point.c \
                src/modules/etdb_sys.c"
 
 ETDB_TEST_SRCS="test/etdb_test_alloc.c \
