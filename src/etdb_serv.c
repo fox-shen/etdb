@@ -53,7 +53,7 @@ etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
 
   if(cmd == NULL || etdb_serv_parse_args(req, cmd) < 0){
     etdb_bytes_t n;
-    size_t len = sizeof("Unkown Command: ") - 1 + (((etdb_bytes_t*)(req->queue.next))->str).len + etdb_bytes_total_len(req);
+    size_t len = sizeof("Unkown Command: ") - 1 + etdb_bytes_total_len(req);
     char *head = etdb_palloc(conn->pool_temp, len);
     char *pos  = memcpy(head, "Unkown Command: ", sizeof("Unkown Command: ") - 1) + sizeof("Unkown Command: ") - 1;
     etdb_bytes_total_copy(pos, req);
@@ -63,8 +63,11 @@ etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
 
     etdb_connect_send_to_buf(conn, &resp);
   }else{
+    ++cmd->calls;
+    long int t_start = etdb_utils_get_timestamp(); 
     int ret = cmd->handler(req, conn, &resp);
     etdb_bytes_t n;
+
     if(ret == 0){ 
       etdb_bytes_set(&n, "+OK", sizeof("+OK") - 1);
     }else{
@@ -72,6 +75,10 @@ etdb_serv_exec_proc(etdb_bytes_t *req, etdb_connection_t *conn)
     }
     etdb_queue_insert_head(&(resp.queue), &(n.queue));
     etdb_connect_send_to_buf(conn, &resp);   
+
+    long int t_end     = etdb_utils_get_timestamp();
+    cmd->time_proc     += t_end - t_start;
+    if(cmd->time_proc_max < t_end - t_start) cmd->time_proc_max = t_end - t_start;
   }
 
   if(conn->buf_out->size > 0){

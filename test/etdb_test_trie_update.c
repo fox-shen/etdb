@@ -8,7 +8,7 @@ TestUpdate(const char* text_file)
      fprintf(stderr, "open file %s failed\n", text_file);
      return;
    }
-   long int time_stamp_1 = etdb_utls_get_timestamp();
+   long int time_stamp_1 = etdb_utils_get_timestamp();
    etdb_trie_t trie;
    etdb_trie_init(&trie);
    unsigned char buf[1024];
@@ -18,14 +18,14 @@ TestUpdate(const char* text_file)
      etdb_trie_update(&trie, buf, strlen(buf) - 1, value++);
    }
 
-   printf("TestUpdate Time: %d(ms)/%d updates\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, value);
+   printf("TestUpdate Time: %d(ms)/%d updates\n", (etdb_utils_get_timestamp() - time_stamp_1)/1000, value);
    printf("size: %d nonzero-size: %d key num: %d\n", etdb_trie_total_size(&trie), etdb_trie_nonzero_size(&trie), etdb_trie_num_keys(&trie));
 }
 
 void
 TestRandomUpdate()
 {
-  long int time_stamp_1 = etdb_utls_get_timestamp();
+  long int time_stamp_1 = etdb_utils_get_timestamp();
   etdb_trie_t trie;
   etdb_trie_init(&trie);
   unsigned char buf[100];
@@ -38,7 +38,7 @@ TestRandomUpdate()
      }
      etdb_trie_update(&trie, buf, 20, cnt);
   }
-  printf("TestUpdate Time: %d(ms)/%d updates\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, loop);
+  printf("TestUpdate Time: %d(ms)/%d updates\n", (etdb_utils_get_timestamp() - time_stamp_1)/1000, loop);
   printf("size: %d nonzero-size: %d key num: %d\n", etdb_trie_total_size(&trie), etdb_trie_nonzero_size(&trie), etdb_trie_num_keys(&trie));
 }
 

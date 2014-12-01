@@ -53,13 +53,13 @@ int etdb_database_list_rtop(etdb_str_t *list_name, etdb_str_t *value);
 /***NOTE:
  *   id->str[-1] must be valid
  ***/
-#define ETDB_GEO_HASH_PRECISION                     12  
+#define ETDB_GEO_HASH_PRECISION_LEN                12  
 #define ETDB_SPATIAL_POINT_MAX_CNT_IN_SET          100  
 typedef struct etdb_value_sp_head_s{
   etdb_value_head_t      common_head;
   double                 lat_d;
   double                 lon_d;
-  uint8_t                geohash_code[ETDB_GEO_HASH_PRECISION];
+  uint8_t                geohash_code[ETDB_GEO_HASH_PRECISION_LEN];
   uint8_t                indexed_len;
 }etdb_value_sp_head_t;
 

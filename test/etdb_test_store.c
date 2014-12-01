@@ -21,14 +21,14 @@ TestLru()
   int total = 0;
   int loop = 0;
 
-  long int time_stamp_1 = etdb_utls_get_timestamp();
+  long int time_stamp_1 = etdb_utils_get_timestamp();
   for(loop = 0; loop < 20; ++loop){
     for(i = 50000; i > 0; --i){
       uint8_t* ptr = etdb_lru_fetch(node_lru, i);  
       total += *ptr;
     }
   }
-  printf("ok %d time: %d\n", total, (etdb_utls_get_timestamp() - time_stamp_1)/1000);
+  printf("ok %d time: %d\n", total, (etdb_utils_get_timestamp() - time_stamp_1)/1000);
 }
 
 int

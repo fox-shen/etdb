@@ -55,12 +55,12 @@ TestSearchHuge()
      etdb_trie_update(&trie, buf_array[i], L, value[i]);
    }
    printf("after huge search key=%d\n", etdb_trie_num_keys(&trie));
-   long int time_stamp_1 = etdb_utls_get_timestamp();
+   long int time_stamp_1 = etdb_utils_get_timestamp();
    for(i = 0; i < N; ++i){
      etdb_id_t v = etdb_trie_exact_match_search(&trie, buf_array[i], L);
      assert(v == value[i]);
    }
-   printf("Huge Search Success, Time: %d(ms)/%d queries\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, N);
+   printf("Huge Search Success, Time: %d(ms)/%d queries\n", (etdb_utils_get_timestamp() - time_stamp_1)/1000, N);
 }
 
 int 

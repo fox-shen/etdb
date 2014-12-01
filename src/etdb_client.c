@@ -217,12 +217,13 @@ etdb_exec_benchmark_cycle(uint8_t** requests_data)
   const etdb_event_t *events = NULL;
   etdb_queue_t *q;
   etdb_connection_t conn_ready_list;
-  long int time_start = etdb_utls_get_timestamp();
+  long int time_start = etdb_utils_get_timestamp();
   int num_sent, bad_req = 0;
 
   for(num_sent = 0; num_sent < etdb_parallel_conn; ++num_sent){
     etdb_cli_handle_user_cmd(etdb_cli_conn_tab[num_sent], requests_data[num_sent], strlen(requests_data[num_sent]));
   }
+  num_sent--;
 
   while(!etdb_quit)
   {
@@ -296,7 +297,7 @@ etdb_exec_benchmark_cycle(uint8_t** requests_data)
            etdb_cli_handle_user_cmd(conn, requests_data[num_sent], strlen(requests_data[num_sent])); 
         }else{
           /*** output qps***/
-          long int time_end = etdb_utls_get_timestamp();
+          long int time_end = etdb_utils_get_timestamp();
           fprintf(stdout, "request: %d, time: %d ms\n", 
                            etdb_request_num,
                            ((time_end - time_start)/1000));
@@ -308,7 +309,7 @@ etdb_exec_benchmark_cycle(uint8_t** requests_data)
            etdb_cli_handle_user_cmd(conn, requests_data[num_sent], strlen(requests_data[num_sent]));
         }else{
            /*** output qps ***/
-           long int time_end = etdb_utls_get_timestamp();
+           long int time_end = etdb_utils_get_timestamp();
            fprintf(stdout, "request: %d, time: %d ms\n",          
                            etdb_request_num,
                            ((time_end - time_start)/1000));

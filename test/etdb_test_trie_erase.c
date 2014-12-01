@@ -22,13 +22,13 @@ TestErase()
      etdb_trie_update(&trie, buf_array[i], strlen(buf_array[i]), 1);
    }
    printf("after update key=%d\n", etdb_trie_num_keys(&trie));
-   long int time_stamp_1 = etdb_utls_get_timestamp();
+   long int time_stamp_1 = etdb_utils_get_timestamp();
    for(i = 0; i < N; ++i){
      // printf("erase: %d -> %d\n", i, N);
      etdb_id_t v = etdb_trie_erase(&trie, buf_array[i], strlen(buf_array[i]));
      ///assert(v == 0);
    }
-   printf("Erase Success, Time: %d(ms)/%d queries\n", (etdb_utls_get_timestamp() - time_stamp_1)/1000, N);
+   printf("Erase Success, Time: %d(ms)/%d queries\n", (etdb_utils_get_timestamp() - time_stamp_1)/1000, N);
    printf("after erase key=%d\n", etdb_trie_num_keys(&trie));
 }
 

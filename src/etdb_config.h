@@ -29,10 +29,11 @@ struct etdb_command_s{
   long int                 calls;
   long int                 time_wait;
   long int                 time_proc;
+  long int                 time_proc_max;
 };
 
-#define etdb_command_padding 0, 0, 0
-#define etdb_null_command etdb_null_string, 0, NULL, 0, 0, 0
+#define etdb_command_padding 0, 0, 0, 0
+#define etdb_null_command etdb_null_string, 0, NULL, etdb_command_padding
 
 #define etdb_module_padding 0
 

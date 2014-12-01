@@ -1,6 +1,7 @@
 #include <etdb.h>
 
 static int etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
+static int etdb_sys_perf_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_help_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_ping_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
@@ -11,6 +12,12 @@ static etdb_command_t etdb_sys_commands[] = {
     etdb_string("info"),
     ETDB_CMD_FLAG_NOARG,
     etdb_sys_info_handler,
+    etdb_command_padding
+  },
+  {
+    etdb_string("perf"),
+    ETDB_CMD_FLAG_ARG1,
+    etdb_sys_perf_handler,
     etdb_command_padding
   },
   {
@@ -76,6 +83,36 @@ etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
   new_bytes->str.len      =  resp_len;
   new_bytes->str.data     =  (uint8_t*)new_bytes + sizeof(etdb_bytes_t);
   etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
+  return 0;
+}
+
+static int
+etdb_sys_perf_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
+{
+  etdb_bytes_t *cmd_str  = (etdb_bytes_t*)(args->queue.next->next);
+  etdb_command_t *cmd = etdb_module_find_command(&(cmd_str->str));
+
+  if(cmd == NULL)   return -1;
+  
+  static char buf[256];
+  char temp[32];
+  char *pos  = memcpyn(buf, cmd->name.data, cmd->name.len);
+  pos        = memcpyn(pos, ":", sizeof(":") - 1);
+  pos        = memcpyn(pos, " calls->", sizeof(" calls->") - 1);
+  sprintf(temp, "%d", cmd->calls);
+  pos        = memcpyn(pos, temp, strlen(temp));
+  pos        = memcpyn(pos, " time_proc->", sizeof(" time_proc->") - 1);
+  sprintf(temp, "%d", cmd->calls ? cmd->time_proc/cmd->calls : 0);
+  pos        = memcpyn(pos, temp, strlen(temp));
+  pos        = memcpyn(pos, " time_proc_max->", sizeof(" time_proc_max->") - 1);
+  sprintf(temp, "%d", cmd->time_proc_max);
+  pos        = memcpyn(pos, temp, strlen(temp)); 
+
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, sizeof(etdb_bytes_t));
+  new_bytes->str.data     = buf;
+  new_bytes->str.len      = pos - buf;
+  etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
+
   return 0;
 }
 
