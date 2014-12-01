@@ -1,3 +1,16 @@
+### Concurrency benchmark
+```
+========== set ==========
+redis -> qps: 133265
+etdb  -> qps: 100000
+========== get ==========
+redis -> qps: 135541
+etdb  -> qps: 135135
+========== del ==========
+redis -> qps: 
+etdb  -> qps: 121951
+```
+
 Building etdb
 ============
 etdb can be compiled and used on Linux. building is as simple as:
