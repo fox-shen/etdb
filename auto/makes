@@ -17,10 +17,10 @@ END
 cat << END > $ETDB_OBJS_MAKEFILE
 
 CC = cc
-CFLAGS = $CFLAGS -O2 -pg 
+CFLAGS = $CFLAGS -O2 -pg -DUSE_JEMALLOC 
 LIBS = libetdb.a
 EXES = etdb_server etdb_cli
-SYSLIBS = -lpthread -lm -lrt -lcrypto -lssl -lidn
+SYSLIBS = -lpthread -lm -lrt -pthread ../deps/jemalloc-3.6.0/lib/libjemalloc.a
 END
 
 for test_src_file_c in $ETDB_TEST_SRCS

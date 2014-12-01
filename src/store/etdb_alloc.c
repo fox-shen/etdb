@@ -1,5 +1,9 @@
 #include <etdb_store_incs.h>
 
+#ifdef USE_JEMALLOC
+#include <jemalloc/jemalloc.h>
+#endif
+
 void* 
 etdb_alloc(size_t size)
 {
@@ -22,6 +26,12 @@ etdb_realloc(void *old, size_t size)
 {
   void *p = realloc(old, size);
   return p;
+}
+
+void  
+etdb_free(void *old)
+{
+  free(old);
 }
 
 void* 

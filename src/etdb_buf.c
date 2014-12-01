@@ -61,8 +61,9 @@ etdb_buf_append_record(etdb_buf_t *buf, etdb_str_t *str)
 void 
 etdb_buf_dsp(etdb_buf_t *buf)
 {
-  char *tmp = malloc(buf->size + 1);
+  char *tmp = (char*)etdb_alloc(buf->size + 1);
   tmp[buf->size + 1] = '\0';
   memcpy(tmp, buf->data, buf->size);
   printf("buf data: %s", tmp); 
+  free(tmp);
 }

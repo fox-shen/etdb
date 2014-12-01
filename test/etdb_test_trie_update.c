@@ -29,7 +29,7 @@ TestRandomUpdate()
   etdb_trie_t trie;
   etdb_trie_init(&trie);
   unsigned char buf[100];
-  int loop = 5000000, cnt = 0;
+  int loop = 1000000, cnt = 0;
   for(; cnt < loop; ++cnt){
      int i = 0;
      for(; i < 100; i++){

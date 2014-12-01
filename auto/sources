@@ -5,7 +5,8 @@ echo "Prepare Sources"
 ETDB_INCS="src \
            src/store \
            src/modules \
-           api/c"
+           api/c \
+           deps/jemalloc-3.6.0/include"
 
 cp src/store/etdb_queue.h  api/c -f
 cp src/store/etdb_string.h api/c -f
