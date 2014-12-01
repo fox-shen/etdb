@@ -1,7 +1,7 @@
 #include <etdb_store_incs.h>
 
 long int 
-etdb_utls_get_timestamp()
+etdb_utils_get_timestamp()
 {
   struct timeval tv;
   gettimeofday(&tv, NULL);
