@@ -70,5 +70,12 @@ etdb_geo_hash_get_neighbor(char *hash, int char_amount, int direction, char *nei
 extern etdb_geo_hash_box_dimension_t 
 etdb_geo_hash_dimensions_for_precision(int precision);
 
+/***
+ * Returns the maximum geohash which can cover the bounding rect
+ */
+extern void
+etdb_geo_hash_get_max_cover_iterate(double lat1, double lat2, double lng1, double lng2, int precision);
+
+
 #endif
 

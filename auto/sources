@@ -48,6 +48,7 @@ ETDB_TEST_SRCS="test/etdb_test_alloc.c \
                 test/etdb_test_trie_search.c \
                 test/etdb_test_trie_update.c \
                 test/etdb_test_client.c \
+                test/etdb_test_geo_hash.c \
                 test/etdb_test_store.c"
 
 mkdir -p $ETDB_OBJS
