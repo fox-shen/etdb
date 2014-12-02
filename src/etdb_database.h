@@ -2,10 +2,12 @@
 #define H_ETDB_DATABASE_H
 
 typedef struct etdb_value_head_s etdb_value_head_t;
+#pragma pack(push, 1)
 struct etdb_value_head_s{
-  size_t    size;
+  uint32_t  size: 24;
   uint8_t   type;
 };
+#pragma pop()
 
 typedef struct etdb_database_s etdb_database_t;
 struct etdb_database_s{
