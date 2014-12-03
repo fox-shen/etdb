@@ -198,137 +198,50 @@ etdb_geo_hash_dimensions_for_precision(int precision)
 }
 
 void
-etdb_geo_hash_get_max_cover_interate_impl(etdb_geo_hash_interval_t *lat_range,
-                                          etdb_geo_hash_interval_t *lng_range,
-                                          etdb_geo_hash_interval_t *lat_interval,
-                                          etdb_geo_hash_interval_t *lng_interval,
-                                          int pos, 
-                                          int precision_bits,
-                                          unsigned char *hash,
-                                          unsigned char hashChar 
-                                          )
+etdb_geo_hash_get_max_cover(double lat1, double lat2, 
+                            double lng1, double lng2, char *hash, int *precision)
 {
-  if(pos > precision_bits)  return;
+  if(lat1 > lat2) etdb_swap(lat1, lat2);
+  if(lng1 > lng2) etdb_swap(lng1, lng2);
 
-  etdb_geo_hash_interval_t *interval;
-  etdb_geo_hash_interval_t *range;
-  int is_even = pos & 0x01;
-  double mid;
-  int in_char = !(pos % 5);
-
-  if(is_even){
-    interval = lng_interval;
-    range    = lng_range;
-  }else{
-    interval = lat_interval;
-    range    = lat_range;
-  }
-  mid      = (interval->low + interval->high) / 2.0;
-  hashChar = hashChar << 1;
-
-  if(range->low > mid){
-    interval->low = mid;
-    hashChar     |= 0x01;
-
-    if(in_char){
-      hash[(pos - 1)/5]  = etdb_geo_hash_char_map[hashChar];
-      hashChar           = 0;
-
-      if(lat_range->low <= lat_interval->low && lat_interval->high <= lat_range->high &&
-          lng_range->low <= lng_interval->low && lng_interval->high <= lng_range->high)
-      {
-        /// TODO: add handler
-        snprintf("1:%d %s \n", (pos - 1)/5 + 1, hash);
-        return;
-      }else if(pos == precision_bits){
-        snprintf("0:%d %s \n", (pos - 1)/5 + 1, hash);
-      }
-    }
-    etdb_geo_hash_get_max_cover_interate_impl(lat_range, lng_range, lat_interval, lng_interval,
-                                              pos + 1, precision_bits, hash, hashChar);
-  }else if(range->high < mid){
-    interval->high = mid;
-    
-    if(in_char){
-      hash[(pos - 1)/5]  = etdb_geo_hash_char_map[hashChar];
-      hashChar           = 0;
-  
-      if(lat_range->low <= lat_interval->low && lat_interval->high <= lat_range->high &&
-         lng_range->low <= lng_interval->low && lng_interval->high <= lng_range->high)
-      {
-        /// TODO: add handler
-        printf("1:%d %s \n", (pos - 1)/5 + 1, hash);
-        return;
-      }else if(pos == precision_bits){
-        printf("0:%d %s \n", (pos - 1)/5 + 1, hash);
-      }
-    }
-    etdb_geo_hash_get_max_cover_interate_impl(lat_range, lng_range, lat_interval, lng_interval,
-                                              pos + 1, precision_bits, hash, hashChar);
-  }else{
-    interval->low              = mid;
-    unsigned char hashCharTemp = hashChar;
-    hashChar                  |= 0x01;
-
-    if(in_char){
-      hash[(pos - 1)/5] = etdb_geo_hash_char_map[hashChar];
-      hashChar          = 0;
-  
-      if(lat_range->low <= lat_interval->low && lat_interval->high <= lat_range->high &&
-         lng_range->low <= lng_interval->low && lng_interval->high <= lng_range->high)
-      {
-        /// TODO: add handler
-        printf("1:%d %s \n", (pos - 1)/5 + 1, hash);
-        goto Next;
-      }else if(pos == precision_bits){
-        printf("0:%d %s \n", (pos - 1)/5 + 1, hash);
-      }
-    }
-    etdb_geo_hash_get_max_cover_interate_impl(lat_range, lng_range, lat_interval, lng_interval,
-                                              pos + 1, precision_bits, hash, hashChar);
-Next:
-    interval->high = mid;
-    hashChar       = hashCharTemp; 
-
-    if(in_char){
-      hash[(pos - 1)/5] = etdb_geo_hash_char_map[hashChar];
-      hashChar          = 0;
-
-      if(lat_range->low <= lat_interval->low && lat_interval->high <= lat_range->high &&
-         lng_range->low <= lng_interval->low && lng_interval->high <= lng_range->high)
-      {
-        /// TODO: add handler
-        printf("1:%d %s \n", (pos - 1)/5 + 1, hash);
-        return;
-      }else if(pos == precision_bits){
-        printf("0:%d %s \n", (pos - 1)/5 + 1, hash);
-      }
-    }
-    etdb_geo_hash_get_max_cover_interate_impl(lat_range, lng_range, lat_interval, lng_interval,
-                                              pos + 1, precision_bits, hash, hashChar);
-  }
-}
-
-extern void
-etdb_geo_hash_get_max_cover_iterate(double lat1, double lat2, double lng1, double lng2, int precision)
-{
-  if(lat1 > lat2){
-    etdb_swap(lat1, lat2);
-  }
-  if(lng1 > lng2){
-    etdb_swap(lng1, lng2);
-  }
-  
-  if(precision < 6 || precision > 12)  precision = 12;
-  
-  precision                            *= 5;
   etdb_geo_hash_interval_t lat_range    = {lat2, lat1};
   etdb_geo_hash_interval_t lng_range    = {lng2, lng1};
-
+  
   etdb_geo_hash_interval_t lat_interval = {MAX_LAT, MIN_LAT};
   etdb_geo_hash_interval_t lng_interval = {MAX_LONG, MIN_LONG};
 
-  unsigned char hash[13] = "\0";
-  etdb_geo_hash_get_max_cover_interate_impl(&lat_range, &lng_range, &lat_interval, &lng_interval, 1, precision, hash, 0);
+  etdb_geo_hash_interval_t *interval, *range;
+  double  mid;
+  int is_even = 1;
+  unsigned int hashChar = 0;
+  int i;
+  int len = *precision*5;;
+
+  for(i = 1; i <= len; i++) {
+    if(is_even) {
+      interval = &lng_interval;
+      range    = &lng_range;
+    } else {
+      interval = &lat_interval;
+      range    = &lat_range;
+    }
+
+    mid = (interval->low + interval->high) / 2.0;
+    hashChar = hashChar << 1;
+
+    if(range->low > mid) {
+      interval->low = mid;
+      hashChar |= 0x01;
+    }else if(range->high < mid){
+      interval->high = mid;
+    }else  return;
+
+    if(!(i % 5)){
+      hash[(i - 1) / 5] = etdb_geo_hash_char_map[hashChar];
+      hashChar = 0;
+      *precision = (i - 1)/5 + 1;
+    }
+    is_even = !is_even;
+  }   
 }
 

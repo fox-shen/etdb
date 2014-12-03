@@ -558,8 +558,9 @@ etdb_trie_common_prefix_path_search_dfs(etdb_trie_t *trie, etdb_id_t from,
       *c             = child;
 
       if(b.value != ETDB_TRIE_NO_VALUE){
-        etdb_bytes_t *new_bytes = etdb_palloc(pool, sizeof(etdb_bytes_t) + etdb_stack_size(stack_in));
+        etdb_bytes_t *new_bytes = etdb_palloc(pool, sizeof(etdb_bytes_t) + etdb_stack_size(stack_in) + sizeof(b.value));
         memcpy(new_bytes + 1, stack_in->elts, stack_in->nelts*stack_in->size);
+        memcpy((uint8_t*)new_bytes + sizeof(etdb_bytes_t) + etdb_stack_size(stack_in), &(b.value), sizeof(b.value));
         new_bytes->str.data     = (uint8_t*)(new_bytes + 1);
         new_bytes->str.len      = stack_in->nelts * stack_in->size;
         etdb_queue_insert_tail(&(result->queue), &(new_bytes->queue)); 

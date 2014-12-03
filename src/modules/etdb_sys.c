@@ -122,7 +122,7 @@ set get del                          key-value operation\n\
 hset hget hdel                       hashtable operation\n\
 sadd sdel smembers sismember         set operation\n\
 lpush rpush ltop rtop lpop rpop      list operation\n\
-siset siget sirect siknn siinfo      spatial index operation\n\
+spset spget spdel sprect siknn geo_hash_info      spatial index operation\n\
 bgsave                               system command\
 ";
 

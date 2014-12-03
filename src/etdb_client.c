@@ -321,8 +321,9 @@ etdb_exec_benchmark_cycle(uint8_t** requests_data)
 }
 
 static void
-etdb_exec_benchmark_kv()
+etdb_exec_benchmark()
 {
+  /**** init request data ****/
   int num = 0;
   uint8_t** requests_data = etdb_alloc(sizeof(char*)*etdb_request_num);
   for(; num < etdb_request_num; ++num){
@@ -330,29 +331,35 @@ etdb_exec_benchmark_kv()
     int n = rand();
     snprintf(buf, sizeof(buf), "k%010d", n);
     sprintf(pack_cmd, "set %s 1", buf);
-    requests_data[num] = etdb_alloc(sizeof(uint8_t)*strlen(pack_cmd) + 1);
+    requests_data[num] = (uint8_t*)etdb_alloc(sizeof(uint8_t)*100);
     requests_data[num][strlen(pack_cmd)] = '\0';
     memcpy(requests_data[num], pack_cmd, strlen(pack_cmd));
   }
-  fprintf(stdout, "Start Set Benchmark\n"); 
+  fprintf(stdout, "set benchmark\n"); 
   etdb_exec_benchmark_cycle(requests_data);
 
   for(num = 0; num < etdb_request_num; ++num){
     memcpy(requests_data[num], "get", 3);
     requests_data[num][strlen(requests_data[num]) - 2] = '\0';
   }
-  fprintf(stdout, "Start Get Benchmark\n");
+  fprintf(stdout, "get benchmark\n");
   etdb_exec_benchmark_cycle(requests_data); 
 
-  fprintf(stdout, "Start Del Benchmark\n");
+  fprintf(stdout, "del benchmark\n");
   for(num = 0; num < etdb_request_num; ++num){
     memcpy(requests_data[num], "del", 3);
   }
   etdb_exec_benchmark_cycle(requests_data);
 
-  fprintf(stdout, "Ping Benchmark\n");
+  fprintf(stdout, "ping benchmark\n");
   for(num = 0; num < etdb_request_num; ++num){
     memcpy(requests_data[num], "ping\0", 5);
+  }
+  etdb_exec_benchmark_cycle(requests_data);
+
+  fprintf(stdout, "spset benchmark\n");
+  for(num = 0; num < etdb_request_num; ++num){
+    sprintf(requests_data[num], "spset id_%d %d %d", num%5000, rand()%90, rand()%180);
   }
   etdb_exec_benchmark_cycle(requests_data);
 }
@@ -365,7 +372,7 @@ main(int argc, char **argv)
   if(!etdb_benchmark){
      etdb_cli_cycle();    
   }else{
-     etdb_exec_benchmark_kv();
+     etdb_exec_benchmark();
   }
   return 0;
 }

@@ -304,9 +304,8 @@ etdb_database_list_rtop(etdb_str_t *list_name, etdb_str_t *value)
 #define ETDB_SPATIAL_POINT_HEAD2   'b'     /// used for geohash predix -> lon lat geohash.
 
 int 
-etdb_database_sp_set(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon)
+etdb_database_sp_set(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon, etdb_pool_t *pool)
 {
-  int ret = 0;
   double lat_d, lon_d;
   if( etdb_atof(lat->data, lat->len, &lat_d) == -1 ||
       etdb_atof(lon->data, lon->len, &lon_d) == -1 ||
@@ -316,26 +315,144 @@ etdb_database_sp_set(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon)
   }
   *(id->data - 1)    = ETDB_SPATIAL_POINT_HEAD1;
   etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), id->data - 1, id->len + 1);
+
+  char* geo_hash_code = (char*)etdb_palloc(pool, ETDB_GEO_HASH_PRECISION_LEN + 1 + id->len); 
+  memcpy(geo_hash_code + ETDB_GEO_HASH_PRECISION_LEN + 1, id->data, id->len);
+  etdb_geo_hash_encode(lat_d, lon_d, geo_hash_code + 1, ETDB_GEO_HASH_PRECISION_LEN); 
+
   if(p_value < 0) /*** first set location ***/
   {
-
-  }else /*** later append location ***/
+    etdb_value_sp_head_t *head = (etdb_value_sp_head_t*)etdb_calloc(sizeof(etdb_value_sp_head_t)); 
+    head->ref++;
+    head->lat_d                = lat_d;
+    head->lon_d                = lon_d; 
+    memcpy(head->geo_hash_code, geo_hash_code + 1, ETDB_GEO_HASH_PRECISION_LEN);
+    
+    if(etdb_trie_update(&(etdb_database->trie), id->data - 1, id->len + 1, (intptr_t)(head)) < 0){
+      etdb_free((void*)head);
+      return -1;
+    }
+    /*** add new sptial point index ***/
+    geo_hash_code[0]           = ETDB_SPATIAL_POINT_HEAD2;
+    
+    if( etdb_trie_update(&(etdb_database->trie), geo_hash_code, 
+        ETDB_GEO_HASH_PRECISION_LEN + 1 + id->len,
+       (intptr_t)(head)) < 0){
+      etdb_trie_erase(&(etdb_database->trie), id->data - 1, id->len + 1);
+      etdb_free(head);
+      return -1;
+    } 
+  }else           /*** later append location ***/
   {
-    etdb_value_head_t *head = (etdb_value_head_t*)p_value;
-           
+    etdb_value_sp_head_t *head = (etdb_value_sp_head_t*)p_value;
+ 
+    if(memcmp(geo_hash_code + 1, head->geo_hash_code, ETDB_GEO_HASH_PRECISION_LEN) != 0)
+    {
+      /*** step1: add new sptial point index ***/
+      geo_hash_code[0]           = ETDB_SPATIAL_POINT_HEAD2;
+      if(etdb_trie_update(&(etdb_database->trie), geo_hash_code, 
+         ETDB_GEO_HASH_PRECISION_LEN + 1 + id->len, (intptr_t)(head)) < 0){
+        return -1;
+      }      
+      char temp[ETDB_GEO_HASH_PRECISION_LEN];
+      memcpy(temp, geo_hash_code + 1, ETDB_GEO_HASH_PRECISION_LEN);
+
+      /*** step2: del old spetial point index ***/
+      memcpy(geo_hash_code + 1, head->geo_hash_code, ETDB_GEO_HASH_PRECISION_LEN);
+      geo_hash_code[0]       = ETDB_SPATIAL_POINT_HEAD2;
+      etdb_trie_erase(&(etdb_database->trie), geo_hash_code, 
+                      ETDB_GEO_HASH_PRECISION_LEN + 1 + id->len);
+
+      memcpy(head->geo_hash_code, temp, ETDB_GEO_HASH_PRECISION_LEN); 
+    }
+    
+    head->lat_d                = lat_d;
+    head->lon_d                = lon_d;         
+  }
+  return 0;
+}
+
+int 
+etdb_database_sp_get(etdb_str_t *id, double *lat, double *lon, char *geo_hash_code)
+{
+  *(id->data - 1)    = ETDB_SPATIAL_POINT_HEAD1;
+  etdb_id_t p_value  = etdb_trie_exact_match_search(&(etdb_database->trie), id->data - 1, id->len + 1);
+  if(p_value < 0)  return -1;
+
+  etdb_value_sp_head_t *head = (etdb_value_sp_head_t*)p_value;
+  *lat                       = head->lat_d;
+  *lon                       = head->lon_d;
+  memcpy(geo_hash_code, head->geo_hash_code, ETDB_GEO_HASH_PRECISION_LEN);
+  return 0;
+}
+
+int 
+etdb_database_sp_del(etdb_str_t *id, etdb_pool_t *pool)
+{
+  *(id->data - 1)    = ETDB_SPATIAL_POINT_HEAD1;
+  etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie), id->data - 1, id->len + 1);
+  if(p_value < 0)  return -1;
+  
+  etdb_value_sp_head_t *head = (etdb_value_sp_head_t*)p_value;
+  char *temp = (char*)etdb_palloc(pool, ETDB_GEO_HASH_PRECISION_LEN + 1 + id->len);
+  temp[0]    = ETDB_SPATIAL_POINT_HEAD2;
+  memcpy(temp + 1, head->geo_hash_code, ETDB_GEO_HASH_PRECISION_LEN);
+  memcpy(temp + 1 + ETDB_GEO_HASH_PRECISION_LEN, id->data, id->len);   
+
+  etdb_trie_erase(&(etdb_database->trie), temp, ETDB_GEO_HASH_PRECISION_LEN + 1 + id->len);
+  etdb_free(head);
+  return 0;
+}
+
+typedef struct etdb_database_sp_rect_handler_arg_s{
+  etdb_pool_t   *pool;
+  etdb_bytes_t  *resp;
+}etdb_database_sp_rect_handler_arg_t;
+
+int 
+etdb_database_sp_rect(etdb_str_t *lat1, etdb_str_t *lat2, etdb_str_t *lon1, etdb_str_t *lon2, etdb_pool_t *pool, etdb_bytes_t *resp)
+{
+  double lat1_d, lat2_d, lon1_d, lon2_d;
+  if( etdb_atof(lat1->data, lat1->len, &lat1_d) == -1 ||
+      etdb_atof(lat2->data, lat2->len, &lat2_d) == -1 ||
+      etdb_atof(lon1->data, lon1->len, &lon1_d) == -1 ||
+      etdb_atof(lon2->data, lon2->len, &lon2_d) == -1 ||
+      lat1_d < -90 || lat1_d > 90 || lon1_d < -180 || lon1_d > 180 ||
+      lat2_d < -90 || lat2_d > 90 || lon2_d < -180 || lon2_d > 180 )
+  {
+    return -1;
+  }
+
+  char hash[13] = "\0";
+  int precision = ETDB_GEO_HASH_PRECISION_LEN;
+  hash[0]  =  ETDB_SPATIAL_POINT_HEAD2;
+  etdb_geo_hash_get_max_cover(lat1_d, lat2_d, lon1_d, lon2_d, hash + 1, &precision);
+
+  etdb_stack_t stack_in;
+  etdb_stack_init(&stack_in, pool, 1, sizeof(uint8_t));
+  etdb_bytes_t *next   = NULL;
+  etdb_trie_common_prefix_path_search(&(etdb_database->trie), hash, precision + 1,
+                                      &stack_in, resp, pool);
+
+
+  for(next=(etdb_bytes_t*)(resp->queue.next);next!=resp;next=(etdb_bytes_t*)(next->queue.next)){
+    etdb_value_sp_head_t *head  = 
+         (etdb_value_sp_head_t*)(*(etdb_id_t*)(next->str.data + next->str.len));
+    next->str.data = next->str.data + ETDB_GEO_HASH_PRECISION_LEN - precision;
+    next->str.len  = next->str.len  - (ETDB_GEO_HASH_PRECISION_LEN - precision);
+
+    if(head->lat_d < lat1_d || 
+       head->lat_d > lat2_d || 
+       head->lon_d < lon1_d || 
+       head->lon_d > lon2_d)
+    {
+        etdb_bytes_t *prev = (etdb_bytes_t*)(next->queue.prev);
+        etdb_queue_remove(&(next->queue));
+        next  = prev;
+    }
   } 
-}
-
-int 
-etdb_database_sp_get(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon)
-{
-
-}
-
-int 
-etdb_database_sp_rect(etdb_str_t *lat1, etdb_str_t *lat2, etdb_str_t *lon1, etdb_str_t *lon2)
-{
-
+ 
+  return 0;
 }
 
 int 

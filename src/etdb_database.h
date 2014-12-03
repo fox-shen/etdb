@@ -4,8 +4,8 @@
 typedef struct etdb_value_head_s etdb_value_head_t;
 #pragma pack(push, 1)
 struct etdb_value_head_s{
-  uint32_t  size: 24;
   uint8_t   type;
+  uint32_t  size: 24;
 };
 #pragma pop()
 
@@ -55,19 +55,23 @@ int etdb_database_list_rtop(etdb_str_t *list_name, etdb_str_t *value);
 /***NOTE:
  *   id->str[-1] must be valid
  ***/
-#define ETDB_GEO_HASH_PRECISION_LEN                12  
-#define ETDB_SPATIAL_POINT_MAX_CNT_IN_SET          100  
+#define ETDB_GEO_HASH_PRECISION_LEN                9 
+#pragma pack(push, 1) 
 typedef struct etdb_value_sp_head_s{
-  etdb_value_head_t      common_head;
+  uint8_t                type;
   double                 lat_d;
   double                 lon_d;
-  uint8_t                geohash_code[ETDB_GEO_HASH_PRECISION_LEN];
-  uint8_t                indexed_len;
+  uint8_t                geo_hash_code[ETDB_GEO_HASH_PRECISION_LEN];
+  uint8_t                indexed_len:6;
+  uint8_t                ref:2;
 }etdb_value_sp_head_t;
+#pragma pack(pop)
 
-int etdb_database_sp_set(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon);
-int etdb_database_sp_get(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon);
-int etdb_database_sp_rect(etdb_str_t *lat1, etdb_str_t *lat2, etdb_str_t *lon1, etdb_str_t *lon2);
+int etdb_database_sp_set(etdb_str_t *id, etdb_str_t *lat, etdb_str_t *lon, etdb_pool_t *pool);
+int etdb_database_sp_get(etdb_str_t *id, double *lat, double *lon, char *geo_hash_code);
+int etdb_database_sp_del(etdb_str_t *id, etdb_pool_t *pool);
+int etdb_database_sp_rect(etdb_str_t *lat1, etdb_str_t *lat2, etdb_str_t *lon1, etdb_str_t *lon2,
+etdb_pool_t *pool, etdb_bytes_t *resp);
 int etdb_database_sp_knn(etdb_str_t *id, etdb_str_t *k);
 
 /*** sys operation **/
