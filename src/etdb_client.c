@@ -359,7 +359,7 @@ etdb_exec_benchmark()
 
   fprintf(stdout, "spset benchmark\n");
   for(num = 0; num < etdb_request_num; ++num){
-    sprintf(requests_data[num], "spset id_%d %d %d", num%5000, rand()%90, rand()%180);
+    sprintf(requests_data[num], "spset id_%d %d %d", num, rand()%90, rand()%180);
   }
   etdb_exec_benchmark_cycle(requests_data);
 }

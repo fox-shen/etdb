@@ -473,7 +473,6 @@ AGAIN:
     ++pos;
   } 
   etdb_trie_node_t *n = trie->node + (trie->node[*from].base ^ 0);
-
   if(n->check != *from){
     return ETDB_TRIE_NO_VALUE;
   }
@@ -490,6 +489,52 @@ etdb_trie_exact_match_search(etdb_trie_t *trie, const char *key, size_t len)
   if(b.i == ETDB_TRIE_NO_PATH)
     b.i = ETDB_TRIE_NO_VALUE;
   return b.value;
+}
+
+etdb_id_t
+etdb_trie_match_longest_search(etdb_trie_t *trie, const char *key, size_t len, size_t *match_len)
+{
+  etdb_id_t to, from = 0, ret = ETDB_TRIE_NO_PATH;
+  uint8_t *key_int8 = (uint8_t*)key;
+  size_t pos = 0;
+
+  for(; pos < len; ){
+    uint8_t word  = key_int8[pos];
+    uint8_t again_word = ' ';
+    switch(word){
+      case '\0':
+        word       = '%';
+        again_word = '0';
+        break;
+      case '%':
+        word       = '%';
+        again_word = '%';
+        break;
+      default:
+        break;
+    }
+
+AGAIN:
+    to         = trie->node[from].base;
+    to         = to ^ word;
+    if(trie->node[to].check != from)
+      return ret;
+    else{
+      etdb_trie_node_t *n = trie->node + (trie->node[to].base ^ 0);
+      if(n->check == to){
+        ret        = n->value;
+        *match_len = pos + 1;
+      }
+    }
+    from       = to;
+    if(again_word != ' '){
+      word       = again_word;
+      again_word = ' ';
+      goto AGAIN;
+    }
+    ++pos;
+  }
+  return ret; 
 }
 
 static void

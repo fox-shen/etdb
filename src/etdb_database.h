@@ -23,6 +23,7 @@ int etdb_database_init();
 int etdb_database_kv_set(etdb_str_t *key, const etdb_str_t *value);
 int etdb_database_kv_get(etdb_str_t *key, etdb_str_t *value);
 int etdb_database_kv_del(etdb_str_t *key);
+int etdb_database_kv_match_longest(etdb_str_t *key, size_t *match_len, etdb_str_t *value);
 
 /**** db: hash type operation ****/
 /***NOTE:

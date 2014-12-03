@@ -61,6 +61,21 @@ etdb_database_kv_del(etdb_str_t *key)
   return 0; 
 }
 
+int 
+etdb_database_kv_match_longest(etdb_str_t *key, size_t *match_len, etdb_str_t *value)
+{
+  etdb_database_encode_kv_head(key);
+  
+  etdb_id_t p_value = etdb_trie_match_longest_search(&(etdb_database->trie), key->data - 1, key->len + 1, match_len);
+  if(p_value < 0)  return -1;
+
+  --(*match_len);
+  etdb_value_head_t *head = (etdb_value_head_t*)p_value;
+  value->len              = head->size;
+  value->data             = (uint8_t*)(head + 1);
+  return 0;
+}
+
 /**** db: hash type ****/
 #define ETDB_HASH_HEAD     '1'
 #define etdb_database_encode_hash_head(hash_name, key)  \

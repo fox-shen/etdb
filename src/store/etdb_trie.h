@@ -69,6 +69,9 @@ etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, etdb_id_t value
 extern etdb_id_t
 etdb_trie_exact_match_search(etdb_trie_t *trie, const char *key, size_t len);
 
+extern etdb_id_t
+etdb_trie_match_longest_search(etdb_trie_t *trie, const char *key, size_t len, size_t *match_len);
+
 extern void
 etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, etdb_stack_t *stack_result);
 
