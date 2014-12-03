@@ -33,9 +33,9 @@ you can use etdb_cli to play with etdb
   % set a b
   % get a
   b
-  % siset id1 30 120
-  % siset id2 30.1 120.1
-  $ sirect 29.5 30.2 119 121
+  % spset id1 30 120
+  % spset id2 30.1 120.1
+  $ sprect 29.5 30.2 119 121
   id1
   id2
 ```
