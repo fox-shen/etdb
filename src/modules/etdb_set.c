@@ -56,7 +56,7 @@ etdb_set_add_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *
   
   do{
     /*** write to db ***/
-    if(etdb_database_set_add(&set_name->str, &key->str) < 0)
+    if(etdb_database_set_add(conn->slot, &set_name->str, &key->str) < 0)
        return -1;   
     key                  = (etdb_bytes_t*)(key->queue.next);
   }while(key != args);
@@ -76,7 +76,7 @@ etdb_set_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *
   set_name->str.data = set_name_str;
 
   do{
-    if(etdb_database_set_del(&set_name->str, &key->str) < 0)
+    if(etdb_database_set_del(conn->slot, &set_name->str, &key->str) < 0)
        return -1;
     key                  = (etdb_bytes_t*)(key->queue.next);
   }while(key != args);
@@ -87,7 +87,7 @@ static int
 etdb_set_members_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
   etdb_bytes_t *set_name = (etdb_bytes_t*)(args->queue.next->next);
-  etdb_database_set_members(&set_name->str, conn->pool_temp, resp);
+  etdb_database_set_members(conn->slot, &set_name->str, conn->pool_temp, resp);
   return 0;
 }
 
@@ -97,7 +97,7 @@ etdb_set_ismember_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_byte
   etdb_bytes_t *set_name = (etdb_bytes_t*)(args->queue.next->next);
   etdb_bytes_t *key      = (etdb_bytes_t*)(set_name->queue.next);
 
-  int contain            = etdb_database_set_ismember(&set_name->str, &key->str); 
+  int contain            = etdb_database_set_ismember(conn->slot, &set_name->str, &key->str); 
   etdb_bytes_t *n        = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, sizeof(etdb_bytes_t));
   if(contain){
     n->str.data = "1";

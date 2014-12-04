@@ -2,6 +2,8 @@
 
 static int etdb_sys_info_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_perf_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
+static int etdb_sys_use_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
+static int etdb_sys_where_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_help_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_bgsave_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
 static int etdb_sys_ping_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp);
@@ -18,6 +20,18 @@ static etdb_command_t etdb_sys_commands[] = {
     etdb_string("perf"),
     ETDB_CMD_FLAG_ARG1,
     etdb_sys_perf_handler,
+    etdb_command_padding
+  },
+  {
+    etdb_string("use"),
+    ETDB_CMD_FLAG_ARG1,
+    etdb_sys_use_handler,
+    etdb_command_padding
+  },
+  {
+    etdb_string("where"),
+    ETDB_CMD_FLAG_NOARG,
+    etdb_sys_where_handler,
     etdb_command_padding
   },
   {
@@ -114,6 +128,30 @@ etdb_sys_perf_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
   etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
 
   return 0;
+}
+
+static int 
+etdb_sys_use_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
+{
+  etdb_bytes_t *slot_str  = (etdb_bytes_t*)(args->queue.next->next);
+  int slot = 0;
+  int status = etdb_atoi(slot_str->str.data, slot_str->str.len, &slot);
+  if(status < 0 || slot <= 0 || slot > etdb_database_sys_max_slot())  return -1;
+  conn->slot = slot - 1;
+  return 0;
+}
+
+static int 
+etdb_sys_where_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
+{
+  char temp[3];
+  sprintf(temp, "%d", conn->slot + 1);
+  etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp, 
+                                       sizeof(etdb_bytes_t) + strlen(temp));
+  new_bytes->str.len      =  strlen(temp);
+  new_bytes->str.data     =  (uint8_t*)(new_bytes + 1);
+  memcpy(new_bytes + 1, temp, strlen(temp));
+  etdb_queue_insert_tail(&(resp->queue), &(new_bytes->queue));
 }
 
 static char etdb_help_msg[] = 

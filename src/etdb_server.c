@@ -79,6 +79,7 @@ etdb_init(int argc, char **argv)
   if(etdb_file_config_get_int("DAEMON", 0)){
     etdb_daemon();
   }
+  etdb_database_sys_load();  /*** load dbs ***/
   etdb_init_server_conn();
   etdb_init_signal();
   etdb_database_init();

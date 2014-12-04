@@ -67,7 +67,7 @@ etdb_sp_set_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
   etdb_bytes_t *lat     = (etdb_bytes_t*)(key->queue.next);
   etdb_bytes_t *lon     = (etdb_bytes_t*)(lat->queue.next);
 
-  return etdb_database_sp_set(&key->str, &lat->str, &lon->str, conn->pool_temp);
+  return etdb_database_sp_set(conn->slot, &key->str, &lat->str, &lon->str, conn->pool_temp);
 }
 
 static int 
@@ -76,7 +76,7 @@ etdb_sp_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
   etdb_bytes_t *key     = (etdb_bytes_t*)(args->queue.next->next);
   double lat, lon;
   char geo_hash_code[ETDB_GEO_HASH_PRECISION_LEN + 1] = "\0";
-  if(etdb_database_sp_get(&key->str, &lat, &lon, geo_hash_code) < 0) return -1; 
+  if(etdb_database_sp_get(conn->slot, &key->str, &lat, &lon, geo_hash_code) < 0) return -1; 
 
   char temp[64];
   sprintf(temp, "%.2f, %.2f (%s)", lat, lon, geo_hash_code);
@@ -94,7 +94,7 @@ static int
 etdb_sp_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
   etdb_bytes_t *key     = (etdb_bytes_t*)(args->queue.next->next);
-  return etdb_database_sp_del(&key->str, conn->pool_temp);
+  return etdb_database_sp_del(conn->slot, &key->str, conn->pool_temp);
 }
 
 static int 
@@ -105,7 +105,8 @@ etdb_sp_rect_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *
   etdb_bytes_t *lon1    = (etdb_bytes_t*)(lat2->queue.next);
   etdb_bytes_t *lon2    = (etdb_bytes_t*)(lon1->queue.next);
 
-  return etdb_database_sp_rect(&lat1->str, &lat2->str, &lon1->str, &lon2->str, conn->pool_temp, resp); 
+  return etdb_database_sp_rect(conn->slot, &lat1->str, &lat2->str, 
+                               &lon1->str, &lon2->str, conn->pool_temp, resp); 
 }
 
 static int 

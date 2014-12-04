@@ -56,7 +56,7 @@ etdb_kv_set_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
   etdb_bytes_t *key   = (etdb_bytes_t*)(args->queue.next->next);
   etdb_bytes_t *value = (etdb_bytes_t*)(key->queue.next);
 
-  return etdb_database_kv_set(&key->str, &value->str);
+  return etdb_database_kv_set(conn->slot, &key->str, &value->str);
 }
 
 static int 
@@ -65,7 +65,7 @@ etdb_kv_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
   etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next); 
 
   etdb_str_t value     = etdb_null_string;
-  int ret = etdb_database_kv_get(&key->str, &value); 
+  int ret = etdb_database_kv_get(conn->slot, &key->str, &value); 
 
   if(ret < 0){
      return -1; 
@@ -81,7 +81,7 @@ static int
 etdb_kv_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
 {
   etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next);
-  return etdb_database_kv_del(&key->str); 
+  return etdb_database_kv_del(conn->slot, &key->str); 
 }
 
 static int 
@@ -102,7 +102,7 @@ etdb_kv_matchlongest_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_b
   size_t match_len;
   etdb_str_t value; 
   
-  if(etdb_database_kv_match_longest(&key->str, &match_len, &value) <  0){
+  if(etdb_database_kv_match_longest(conn->slot, &key->str, &match_len, &value) <  0){
     return -1;
   }
   char len_str[32];

@@ -21,6 +21,8 @@ struct etdb_connection_s{
 
   etdb_bytes_t recv_cmd;
   etdb_bytes_t free_cmd;
+
+  int slot;
 };
 
 #define ETDB_CONNECTION_DEFAULT_POOL_SIZE 8192

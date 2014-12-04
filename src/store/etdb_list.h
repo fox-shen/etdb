@@ -3,8 +3,8 @@
 
 typedef struct etdb_list_s etdb_list_t;
 struct etdb_list_s{
+  uint32_t       size;
   etdb_queue_t   queue;
-  size_t         size;
   uint8_t        data[0]; 
 };
 

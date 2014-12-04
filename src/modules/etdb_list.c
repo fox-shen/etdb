@@ -62,7 +62,7 @@ etdb_list_lpush_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
   etdb_bytes_t *name  = (etdb_bytes_t*)(args->queue.next->next);
   etdb_bytes_t *value = (etdb_bytes_t*)(name->queue.next);
 
-  return etdb_database_list_lpush(&name->str, &value->str);
+  return etdb_database_list_lpush(conn->slot, &name->str, &value->str);
 }
 
 static int 
@@ -71,7 +71,7 @@ etdb_list_rpush_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_
   etdb_bytes_t *name   = (etdb_bytes_t*)(args->queue.next->next);
   etdb_bytes_t *value  = (etdb_bytes_t*)(name->queue.next);
 
-  return etdb_database_list_rpush(&name->str, &value->str);
+  return etdb_database_list_rpush(conn->slot, &name->str, &value->str);
 }
 
 static int 
@@ -79,7 +79,7 @@ etdb_list_lpop_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
 {
   etdb_bytes_t *name   = (etdb_bytes_t*)(args->queue.next->next);
   etdb_str_t value;
-  int ret = etdb_database_list_lpop(&name->str, &value);
+  int ret = etdb_database_list_lpop(conn->slot, &name->str, &value);
   if(ret < 0){
      return -1;
   }
@@ -98,7 +98,7 @@ etdb_list_rpop_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
 {
   etdb_bytes_t *name   = (etdb_bytes_t*)(args->queue.next->next);
   etdb_str_t value;
-  int ret = etdb_database_list_rpop(&name->str, &value);
+  int ret = etdb_database_list_rpop(conn->slot, &name->str, &value);
   if(ret < 0){
      return -1;
   }
@@ -117,7 +117,7 @@ etdb_list_ltop_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
 {
   etdb_bytes_t *name   = (etdb_bytes_t*)(args->queue.next->next);
   etdb_str_t value;
-  int ret = etdb_database_list_ltop(&name->str, &value);
+  int ret = etdb_database_list_ltop(conn->slot, &name->str, &value);
   if(ret < 0){
      return -1;
   }
@@ -134,7 +134,7 @@ etdb_list_rtop_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t
 {
   etdb_bytes_t *name   = (etdb_bytes_t*)(args->queue.next->next);
   etdb_str_t value;
-  int ret = etdb_database_list_rtop(&name->str, &value);
+  int ret = etdb_database_list_rtop(conn->slot, &name->str, &value);
   if(ret < 0){
      return -1;
   }

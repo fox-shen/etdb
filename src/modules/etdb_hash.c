@@ -45,7 +45,7 @@ etdb_hash_set_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
 
   if(name->str.len > 255)  return -1;
  
-  return etdb_database_hash_set(&name->str, &key->str, &value->str);
+  return etdb_database_hash_set(conn->slot, &name->str, &key->str, &value->str);
 }
 
 static int 
@@ -57,7 +57,7 @@ etdb_hash_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
   if(name->str.len > 255)  return -1;
 
   etdb_str_t    value;
-  int ret = etdb_database_hash_get(&name->str, &key->str, &value); 
+  int ret = etdb_database_hash_get(conn->slot, &name->str, &key->str, &value); 
 
   if(ret < 0){
      return -1; 
@@ -77,5 +77,5 @@ etdb_hash_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t 
 
   if(name->str.len > 255)  return -1;
 
-  return etdb_database_hash_del(&name->str, &key->str); 
+  return etdb_database_hash_del(conn->slot, &name->str, &key->str); 
 }
