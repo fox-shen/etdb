@@ -44,15 +44,29 @@ struct etdb_trie_node_s{
 typedef struct etdb_trie_s etdb_trie_t;
 struct etdb_trie_s{
   etdb_trie_node_t    *node; 
+  etdb_trie_node_t    *node_new;
+ 
   etdb_trie_ninfo_t   *ninfo;
+  etdb_trie_ninfo_t   *ninfo_new;
+
   etdb_trie_block_t   *block;
+  etdb_trie_block_t   *block_new;
+
   etdb_id_t            block_head_full;
   etdb_id_t            block_head_close;
   etdb_id_t            block_head_open;
   etdb_id_t            capacity;
+  etdb_id_t            capacity_new;
   etdb_id_t            size;
   etdb_id_t            reject[257]; 
+
+  uint8_t              move_on;
+  etdb_id_t            move_left;
 };
+
+extern etdb_trie_node_t*   NodeAt(etdb_trie_t  *trie, etdb_id_t idx);
+extern etdb_trie_ninfo_t*  NinfoAt(etdb_trie_t *trie, etdb_id_t idx);
+extern etdb_trie_block_t*  BlockAt(etdb_trie_t *trie, etdb_id_t idx);
 
 /*** initialize trie ***/
 extern int
