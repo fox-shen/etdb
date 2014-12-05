@@ -36,7 +36,7 @@ etdb_buf_grow(etdb_buf_t *buf)
 int 
 etdb_buf_append_record(etdb_buf_t *buf, etdb_str_t *str)
 {
-  size_t size = 16 + str->len + 1;
+  size_t size = 16 + 2*str->len + 1;   /**** maximum send data size ***/
   while(size > etdb_buf_space(buf)){
     if(etdb_buf_grow(buf) == -1)
       return -1;
@@ -56,6 +56,14 @@ etdb_buf_append_record(etdb_buf_t *buf, etdb_str_t *str)
   p += 1;
   buf->size += (num + str->len + 1);
   return num + str->len + 1;    
+}
+
+int 
+etdb_buf_append_record_tail(etdb_buf_t *buf)
+{
+  etdb_str_t empty = etdb_string("");
+  etdb_buf_append_record(buf, &empty);
+  return 0;
 }
 
 void 

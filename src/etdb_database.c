@@ -258,7 +258,7 @@ etdb_database_list_rpush(int sl, etdb_str_t *list_name, etdb_str_t *value)
 }
 
 int 
-etdb_database_list_lpop(int sl, etdb_str_t *list_name, etdb_str_t *value)
+etdb_database_list_lpop(int sl, etdb_str_t *list_name)
 {
   etdb_database_encode_list_head(list_name);
 
@@ -270,11 +270,7 @@ etdb_database_list_lpop(int sl, etdb_str_t *list_name, etdb_str_t *value)
   etdb_list_t *head = (etdb_list_t*)p_value;
   if(etdb_list_empty(head))  return -1;
 
-  etdb_list_t *l    = (etdb_list_t*)(head->queue.next);
-  etdb_queue_remove(&(l->queue));
-  value->data       = l->data;
-  value->len        = l->size;
-
+  etdb_list_lpop(head);
   if(etdb_queue_empty(&(head->queue))){
     etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie[sl]), 
                                list_name->data - 1, list_name->len + 1);
@@ -285,7 +281,7 @@ etdb_database_list_lpop(int sl, etdb_str_t *list_name, etdb_str_t *value)
 }
 
 int 
-etdb_database_list_rpop(int sl, etdb_str_t *list_name, etdb_str_t *value)
+etdb_database_list_rpop(int sl, etdb_str_t *list_name)
 {
   etdb_database_encode_list_head(list_name);
 
@@ -296,11 +292,7 @@ etdb_database_list_rpop(int sl, etdb_str_t *list_name, etdb_str_t *value)
   etdb_list_t *head = (etdb_list_t*)p_value;
   if(etdb_list_empty(head))  return -1;
 
-  etdb_list_t *l    = (etdb_list_t*)(head->queue.prev);
-  etdb_queue_remove(&(l->queue));
-  value->data       = l->data;
-  value->len        = l->size;
-
+  etdb_list_rpop(head);
   if(etdb_queue_empty(&(head->queue))){
     etdb_id_t p_value  = etdb_trie_erase(&(etdb_database->trie[sl]), 
                              list_name->data - 1, list_name->len + 1);
@@ -322,7 +314,7 @@ etdb_database_list_ltop(int sl, etdb_str_t *list_name, etdb_str_t *value)
   etdb_list_t *head = (etdb_list_t*)p_value;
   if(etdb_list_empty(head))  return -1;
 
-  etdb_list_t *l    = (etdb_list_t*)(head->queue.next);
+  etdb_list_t *l    = etdb_list_next(head);
   value->data       = l->data;
   value->len        = l->size;
   return 0;
@@ -339,7 +331,7 @@ etdb_database_list_rtop(int sl, etdb_str_t *list_name, etdb_str_t *value)
   etdb_list_t *head = (etdb_list_t*)p_value;
   if(etdb_list_empty(head))  return -1;
 
-  etdb_list_t *l    = (etdb_list_t*)(head->queue.prev);
+  etdb_list_t *l    = etdb_list_prev(head);
   value->data       = l->data;
   value->len        = l->size;
   return 0;

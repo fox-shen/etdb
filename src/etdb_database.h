@@ -54,8 +54,8 @@ int etdb_database_set_ismember(int sl, etdb_str_t *set_name, etdb_str_t *key);
 /**** db: list operation ***/
 int etdb_database_list_lpush(int sl, etdb_str_t *list_name, etdb_str_t *value);
 int etdb_database_list_rpush(int sl, etdb_str_t *list_name, etdb_str_t *value);
-int etdb_database_list_lpop(int sl, etdb_str_t *list_name, etdb_str_t *value);
-int etdb_database_list_rpop(int sl, etdb_str_t *list_name, etdb_str_t *value);
+int etdb_database_list_lpop(int sl, etdb_str_t *list_name);
+int etdb_database_list_rpop(int sl, etdb_str_t *list_name);
 int etdb_database_list_ltop(int sl, etdb_str_t *list_name, etdb_str_t *value);
 int etdb_database_list_rtop(int sl, etdb_str_t *list_name, etdb_str_t *value);
 

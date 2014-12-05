@@ -224,7 +224,7 @@ etdb_connect_send_to_buf(etdb_connection_t *conn, etdb_bytes_t *resp)
     etdb_bytes_t *bytes = (etdb_bytes_t*)q;
     etdb_buf_append_record(conn->buf_out, &(bytes->str));
   }
-  etdb_str_t fin_str = etdb_string("\n");
+  etdb_str_t fin_str = etdb_string("");
   etdb_buf_append_record(conn->buf_out, &fin_str);
 }
 
@@ -271,7 +271,7 @@ etdb_connect_send_cmd(etdb_connection_t *conn, uint8_t *cmd, size_t len)
     }
   }
   if(cmd_num == 0)  return -1;
-  etdb_str_t fin_str = etdb_string("\n");
+  etdb_str_t fin_str = etdb_string("");
   etdb_buf_append_record(conn->buf_out, &fin_str);
   return 0;
 }

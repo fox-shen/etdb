@@ -42,7 +42,7 @@ etdb_resp_parse_req(etdb_connection_t *conn)
     size -= head_len + body_len;
     if(size < 0)  break;
 
-    if(body[0] == '\n'){
+    if(body[0] == '\n' && body_len == 0){
       parsed += head_len + body_len;
       etdb_buf_decr(buf_in, parsed);
       return 0;

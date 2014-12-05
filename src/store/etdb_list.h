@@ -8,6 +8,12 @@ struct etdb_list_s{
   uint8_t        data[0]; 
 };
 
+#define etdb_list_next(list)  \
+((etdb_list_t*)((uint8_t*)((list)->queue.next) - offsetof(etdb_list_t, queue)))
+
+#define etdb_list_prev(list)  \
+((etdb_list_t*)((uint8_t*)((list)->queue.prev) - offsetof(etdb_list_t, queue)))
+
 etdb_list_t*
 etdb_list_new()
 {
@@ -53,20 +59,20 @@ etdb_list_size(etdb_list_t *head)
   return size;
 }
 
-etdb_list_t*
+void
 etdb_list_lpop(etdb_list_t *head)
 {
-  etdb_list_t *l = (etdb_list_t*)head->queue.next; 
+  etdb_list_t *l = etdb_list_next(head); 
   etdb_queue_remove(&(l->queue));
-  return l;
+  etdb_free(l);
 }
 
-etdb_list_t*
+void
 etdb_list_rpop(etdb_list_t *head)
 {
-  etdb_list_t *l = (etdb_list_t*)head->queue.prev;
+  etdb_list_t *l = etdb_list_prev(head);
   etdb_queue_remove(&(l->queue));
-  return l;
+  etdb_free(l);
 }
 
 #endif

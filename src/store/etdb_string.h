@@ -9,6 +9,8 @@ typedef struct{
 #define etdb_string(str) {sizeof(str) - 1, (uint8_t*)str}
 #define etdb_null_string {0, NULL}
 #define memcpyn(dst, src, len) ((uint8_t*)memcpy(dst, src, len) + len)
+#define etdb_str_equal(etdb_str, p, size) \
+(((etdb_str)->len == (size))&&(strncmp((etdb_str)->data, p, size)))
 
 #define etdb_swap(a, b) { a = a + b; b = a -b;  a = a - b; }
 

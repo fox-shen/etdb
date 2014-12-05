@@ -18,6 +18,7 @@ void etdb_buf_nice(etdb_buf_t *buf);
 int etdb_buf_grow(etdb_buf_t *buf);
 #define etdb_buf_slot(buf)       (buf->data + buf->size)
 int etdb_buf_append_record(etdb_buf_t *buf, etdb_str_t *str);
+int etdb_buf_append_record_tail(etdb_buf_t *buf);
 void etdb_buf_dsp(etdb_buf_t *buf);
 
 #endif

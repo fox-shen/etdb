@@ -79,7 +79,7 @@ etdb_sp_get_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
   if(etdb_database_sp_get(conn->slot, &key->str, &lat, &lon, geo_hash_code) < 0) return -1; 
 
   char temp[64];
-  sprintf(temp, "%.2f, %.2f (%s)", lat, lon, geo_hash_code);
+  sprintf(temp, "%.2f %.2f (%s)", lat, lon, geo_hash_code);
 
   etdb_bytes_t *new_bytes = (etdb_bytes_t*)etdb_palloc(conn->pool_temp,
                                                sizeof(etdb_bytes_t) + strlen(temp));
