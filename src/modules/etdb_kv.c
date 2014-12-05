@@ -27,12 +27,6 @@ static etdb_command_t etdb_kv_commands[] = {
     etdb_command_padding
   },
   {
-    etdb_string("matchall"),
-    ETDB_CMD_FLAG_ARG1,
-    etdb_kv_matchall_handler,
-    etdb_command_padding
-  },
-  {
     etdb_string("matchlongest"),
     ETDB_CMD_FLAG_ARG1,
     etdb_kv_matchlongest_handler,
@@ -82,17 +76,6 @@ etdb_kv_del_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *r
 {
   etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next);
   return etdb_database_kv_del(conn->slot, &key->str); 
-}
-
-static int 
-etdb_kv_matchall_handler(etdb_bytes_t *args, etdb_connection_t *conn, etdb_bytes_t *resp)
-{
-  etdb_bytes_t *key    = (etdb_bytes_t*)(args->queue.next->next);
-  size_t match_len;
-  etdb_str_t value;
-
-   
-  return 0; 
 }
 
 static int 
