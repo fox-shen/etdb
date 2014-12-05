@@ -58,81 +58,21 @@ etdb_trie_block_realloc(etdb_trie_block_t **block, size_t size_n, size_t size_p)
 etdb_trie_node_t*   
 NodeAt(etdb_trie_t  *trie, etdb_id_t idx)
 {
-  if(trie->move_on){
-    return (idx < trie->move_left) ? trie->node + idx : trie->node_new + idx;
-  }else{
-    return trie->node + idx;
-  }
-  //return (idx < trie->capacity) ? trie->node + idx : trie->node_new + idx;
+  return trie->node + idx;
 }
 
 etdb_trie_ninfo_t*  
 NinfoAt(etdb_trie_t *trie, etdb_id_t idx)
 {
-  if(trie->move_on){
-    return (idx < trie->move_left) ? trie->ninfo + idx : trie->ninfo_new + idx;
-  }else{
-    return trie->ninfo + idx;
-  }
-  //return (idx < trie->capacity) ? trie->ninfo + idx : trie->ninfo_new + idx;
+  return trie->ninfo + idx;
 }
 
 etdb_trie_block_t*  
 BlockAt(etdb_trie_t *trie, etdb_id_t idx)
 {
-  if(trie->move_on){
-    return (idx < (trie->move_left >> 8)) ? trie->block + idx : trie->block_new + idx; 
-  }else{
-    return trie->block + idx;
-  }  
-  //return (idx < (trie->capacity >> 8)) ? trie->block + idx : trie->block_new + idx;
+  return trie->block + idx;
 }
 
-static void
-etdb_trie_check_move_on(etdb_trie_t *trie, uint8_t full_move)
-{
-  if(!trie->move_on)   return;
-
-  if(!full_move){
-     int loop = 1;
-     while(loop--)
-     {
-       etdb_id_t offset = trie->move_left - 256; 
-       memcpy(trie->node_new  + offset, trie->node + offset, sizeof(etdb_trie_node_t)*256);
-       memcpy(trie->ninfo_new + offset, trie->ninfo+ offset, sizeof(etdb_trie_ninfo_t)*256);
-       memcpy(trie->block_new + (offset >> 8), trie->block + (offset >> 8), sizeof(etdb_trie_block_t));
-       trie->move_left  -= 256;
- 
-       if(trie->move_left == 0)  break;
-     }/*
-     memcpy(trie->node_new,  trie->node,  sizeof(etdb_trie_node_t)*trie->move_left);
-     memcpy(trie->ninfo_new, trie->ninfo, sizeof(etdb_trie_ninfo_t)*trie->move_left);
-     memcpy(trie->block_new, trie->block, sizeof(etdb_trie_block_t)*(trie->move_left >> 8));
-     trie->move_left  = 0;*/
-  }else{
-     memcpy(trie->node_new,  trie->node,  sizeof(etdb_trie_node_t)*trie->move_left);
-     memcpy(trie->ninfo_new, trie->ninfo, sizeof(etdb_trie_ninfo_t)*trie->move_left);
-     memcpy(trie->block_new, trie->block, sizeof(etdb_trie_block_t)*(trie->move_left >> 8));
-     trie->move_left  = 0;
-  }
-
-  if(trie->move_left == 0){
-    trie->move_on  = 0;
-
-    etdb_free(trie->node);
-    etdb_free(trie->ninfo);
-    etdb_free(trie->block);
-
-    trie->node       = trie->node_new;
-    trie->ninfo      = trie->ninfo_new;
-    trie->block      = trie->block_new;
-
-    trie->node_new   = NULL;
-    trie->ninfo_new  = NULL;
-    trie->block_new  = NULL;
-    trie->capacity   = trie->capacity_new;
-  }
-}
 
 int
 etdb_trie_init(etdb_trie_t *trie)
@@ -146,7 +86,7 @@ etdb_trie_init(etdb_trie_t *trie)
   if(etdb_trie_block_realloc(&(trie->block), 1,   0) == 0)
     return -1;
 
-  trie->capacity_new  = trie->capacity  = trie->size = 256;
+  trie->capacity      = trie->size = 256;
   trie->node[0].base  = 0;
   trie->node[0].check = -1; 
   
@@ -174,25 +114,13 @@ etdb_trie_destory(etdb_trie_t *trie)
     etdb_free(trie->node);
     trie->node = NULL;
   }
-  if(trie->node_new != NULL){
-    etdb_free(trie->node_new);
-    trie->node_new = NULL;
-  }
   if(trie->ninfo != NULL){
     etdb_free(trie->ninfo);
     trie->ninfo = NULL;
   }
-  if(trie->ninfo_new != NULL){
-    etdb_free(trie->ninfo_new);
-    trie->ninfo_new = NULL;
-  }
   if(trie->block != NULL){
     etdb_free(trie->block);
     trie->block = NULL;
-  }
-  if(trie->block_new != NULL){
-    etdb_free(trie->block_new);
-    trie->block_new = NULL;
   }
 }
 
@@ -230,17 +158,14 @@ static etdb_id_t
 etdb_trie_add_block(etdb_trie_t *trie)
 {
   etdb_id_t i;
-  if(trie->size == trie->capacity_new)
+  if(trie->size == trie->capacity)
   {
-    etdb_trie_check_move_on(trie, 1);
-    trie->capacity_new        = 2*trie->capacity;
+    etdb_id_t old_cap     = trie->capacity;
+    trie->capacity        = 2*trie->capacity;
   
-    etdb_trie_node_realloc(&(trie->node_new),   trie->capacity_new,      trie->capacity);
-    etdb_trie_ninfo_realloc(&(trie->ninfo_new), trie->capacity_new,      trie->capacity);
-    etdb_trie_block_realloc(&(trie->block_new), trie->capacity_new >> 8, trie->capacity >> 8);
-
-    trie->move_on             = 1;
-    trie->move_left           = trie->capacity;
+    etdb_trie_node_realloc(&(trie->node),   trie->capacity,      old_cap);
+    etdb_trie_ninfo_realloc(&(trie->ninfo), trie->capacity,      old_cap);
+    etdb_trie_block_realloc(&(trie->block), trie->capacity >> 8, old_cap >> 8);
   }
 
   BlockAt(trie, trie->size >> 8)->ehead   = trie->size;
@@ -528,7 +453,7 @@ etdb_trie_update(etdb_trie_t *trie, const char *key, size_t len, etdb_id_t value
   etdb_id_t pos  = 0;
   if(len == 0)
     return -1;
-  etdb_trie_check_move_on(trie, 0);
+  
   const uint8_t *key_uint8 = (const uint8_t*)key;
   for( ; pos < len; ++(pos)){
     etdb_trie_update_entry(trie, &from, key_uint8[pos], 0);
@@ -588,7 +513,7 @@ etdb_trie_exact_match_search(etdb_trie_t *trie, const char *key, size_t len)
   size_t  pos  = 0;
   etdb_id_t from = 0;
   union{ etdb_id_t i; etdb_id_t value;} b;
-  etdb_trie_check_move_on(trie, 0);
+  
   b.i = etdb_trie_find(trie, key, &from, pos, len);
   if(b.i == ETDB_TRIE_NO_PATH)
     b.i = ETDB_TRIE_NO_VALUE;
@@ -601,7 +526,7 @@ etdb_trie_match_longest_search(etdb_trie_t *trie, const char *key, size_t len, s
   etdb_id_t to, from = 0, ret = ETDB_TRIE_NO_PATH;
   uint8_t *key_int8 = (uint8_t*)key;
   size_t pos = 0;
-  etdb_trie_check_move_on(trie, 0);
+  
 
   for(; pos < len; ){
     uint8_t word  = key_int8[pos];
@@ -674,7 +599,7 @@ etdb_trie_common_prefix_search(etdb_trie_t *trie, const char *key, size_t len, e
   size_t pos = 0;
   etdb_id_t from = 0, to = 0;
   union{ etdb_id_t i; etdb_id_t value;} b;
-  etdb_trie_check_move_on(trie, 0);
+  
   b.i = etdb_trie_find(trie, key, &from, pos, len);
 
   if(b.i == ETDB_TRIE_NO_PATH){
@@ -732,7 +657,6 @@ etdb_trie_common_prefix_path_search(etdb_trie_t *trie, const char *key, size_t l
   size_t pos     = 0;
   etdb_id_t from = 0;
   union{ etdb_id_t i; etdb_id_t value;} b;
-  etdb_trie_check_move_on(trie, 0);
   b.i  = etdb_trie_find(trie, key, &from, pos, len);
 
   if(b.i == ETDB_TRIE_NO_PATH){
@@ -771,8 +695,7 @@ etdb_trie_erase(etdb_trie_t *trie, const char *key, size_t len)
 {
   etdb_id_t from = 0, pos = 0;
   union{ etdb_id_t i; etdb_id_t value;} b;
-  etdb_trie_check_move_on(trie, 0);
-
+  
   b.i = etdb_trie_find(trie, key, &from, pos, len);
   if(b.i == ETDB_TRIE_NO_PATH || b.i == ETDB_TRIE_NO_VALUE){
     return -1;

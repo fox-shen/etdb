@@ -508,7 +508,7 @@ etdb_database_sp_rect(int sl,
 int 
 etdb_database_sp_knn(int sl, etdb_str_t *id, etdb_str_t *k)
 {
- 
+   
 }
 
 const uint8_t*
